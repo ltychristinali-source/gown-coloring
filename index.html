@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>服装设计填色 · 面料·蕾丝·皮草</title>
+<style>
+:root{--bg:#efeae2;--ink:#2b2622;--muted:#8b8279;--card:#fffdf9;--line:#e4dcd0;--accent:#a8483f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang SC","Noto Sans SC","Helvetica Neue",system-ui,sans-serif;overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+header{flex:none;display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--card);border-bottom:1px solid var(--line)}
+header h1{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;margin:0;font-size:15px;font-weight:600;letter-spacing:.5px;white-space:nowrap}
+header h1 small{font-weight:400;color:var(--muted);margin-left:6px;font-size:11px}
+@media(max-width:420px){header h1 small{display:none}}
+.ib{white-space:nowrap;flex:none;border:1px solid var(--line);background:#fff;color:var(--ink);height:34px;min-width:34px;padding:0 10px;border-radius:9px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+.ib:active{background:#f1ece4}
+.ib[disabled]{opacity:.35}
+.ib.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
+#stage{flex:1;min-height:120px;position:relative;overflow:hidden;touch-action:none;background:#e4ded4;cursor:crosshair}
+#stage.move{cursor:grab}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;box-shadow:0 2px 18px rgba(60,40,20,.18);will-change:transform}
+#world canvas{position:absolute;left:0;top:0;display:block}
+#hint{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:rgba(43,38,34,.82);color:#fff;font-size:12px;padding:7px 12px;border-radius:20px;pointer-events:none;transition:opacity .6s;white-space:nowrap}
+#loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#e4ded4;color:var(--muted);font-size:13px;z-index:5}
+#panel{flex:none;background:var(--card);border-top:1px solid var(--line);padding:6px 0 max(8px,env(safe-area-inset-bottom));position:relative}
+.row{display:flex;gap:7px;padding:3px 10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.row::-webkit-scrollbar{display:none}
+.tabs{align-items:center}
+.tab{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;height:34px;font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+#fold{flex:none;width:34px;height:34px;border:none;background:none;font-size:16px;color:var(--muted);cursor:pointer}
+.chip{flex:none;width:58px;border:1.5px solid transparent;background:none;padding:2px;border-radius:11px;cursor:pointer;color:var(--ink);font-size:11px;text-align:center}
+.chip canvas{display:block;width:52px;height:42px;border-radius:8px;border:1px solid var(--line);background:#fff}
+.chip span{display:block;margin-top:3px;line-height:1}
+.chip.on{border-color:var(--accent)}
+.colors{align-items:center;padding-top:5px;padding-bottom:5px}
+.sw{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.sw.on{box-shadow:0 0 0 2.5px var(--accent)}
+.pick{flex:none;position:relative;width:28px;height:28px;border-radius:50%;background:conic-gradient(#e44,#ea3,#4c5,#3ad,#94e,#e44);box-shadow:0 0 0 1px var(--line);overflow:hidden}
+.pick input{position:absolute;inset:-6px;width:44px;height:44px;opacity:0;cursor:pointer}
+.sliders{gap:14px;align-items:center;font-size:12px;color:var(--muted)}
+.sliders label{display:flex;align-items:center;gap:6px;white-space:nowrap;flex:none}
+.sliders input[type=range]{width:96px;accent-color:var(--accent)}
+.sliders .lock{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;font-size:12px;color:var(--ink);cursor:pointer;flex:none}
+.sliders .lock.on{background:#f4e6e3;border-color:var(--accent);color:var(--accent)}
+.collapsed .fold-me{display:none}
+#gown{position:fixed;inset:0;background:rgba(30,24,20,.6);display:none;z-index:15;align-items:flex-end;justify-content:center}
+#gown.on{display:flex}
+.gbox{background:var(--card);width:100%;max-width:760px;max-height:82%;border-radius:16px 16px 0 0;padding:12px 12px 16px;display:flex;flex-direction:column;gap:8px}
+.gh{display:flex;align-items:center;justify-content:space-between}
+#gownGrid{overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;-webkit-overflow-scrolling:touch}
+.gi{border:1px solid var(--line);background:#fbf8f2;border-radius:10px;padding:6px 4px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--ink);cursor:pointer}
+.gi img{height:120px;width:auto;max-width:100%;object-fit:contain}
+.gi.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.gbox p{margin:0;font-size:11px;color:var(--muted)}
+#modal{position:fixed;inset:0;background:rgba(30,24,20,.72);display:none;align-items:center;justify-content:center;z-index:20;flex-direction:column;gap:12px;padding:16px}
+#modal.on{display:flex}
+#modal img{max-width:100%;max-height:74%;background:#fff;border-radius:6px;-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default}
+#modal p{margin:0;color:#fff;font-size:13px}
+
+.cats{padding-top:2px;padding-bottom:2px}
+.cat{flex:none;border:1px solid var(--line);background:#fff;border-radius:14px;height:26px;padding:0 11px;font-size:12px;color:var(--ink);cursor:pointer;white-space:nowrap}
+.cat.on{background:#f4e6e3;border-color:var(--accent);color:var(--accent)}
+.chip span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:3px;line-height:1.2;overflow:hidden;font-size:10.5px;height:2.4em;word-break:break-all}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+.seg button{border:none;background:#fff;padding:5px 10px;font-size:12px;color:var(--ink);cursor:pointer}
+.seg button.on{background:var(--ink);color:#fff}
+#busy{position:absolute;right:10px;top:10px;background:rgba(43,38,34,.82);color:#fff;font-size:12px;padding:6px 11px;border-radius:16px;pointer-events:none;display:none;z-index:4}
+.sliders b{font-weight:500;color:#2b2622;min-width:34px;display:inline-block}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>服装设计填色<small>面料 · 蕾丝 · 皮草</small></h1>
+    <button class="ib" id="bGown">底图</button>
+    <button class="ib" id="bUndo" title="撤销" disabled>↶</button>
+    <button class="ib" id="bRedo" title="重做" disabled>↷</button>
+    <button class="ib" id="bView" title="视图">全身</button>
+    <button class="ib pri" id="bSave">保存</button>
+  </header>
+  <div id="stage">
+    <div id="world"></div>
+    <div id="hint">按住看高亮范围 · 松手填充 · 拖动可换区域 · 双指缩放</div>
+    <div id="busy">载入纹理…</div>
+    <div id="loading">载入线稿中…</div>
+  </div>
+  <div id="panel">
+    <div class="row tabs" id="tools">
+      <button class="tab on" data-t="fill">填充</button>
+      <button class="tab" data-t="clear">清除</button>
+      <button class="tab" data-t="move">移动</button>
+      <button id="fold" title="收起">⌄</button>
+    </div>
+    <div class="fold-me">
+      <div class="row cats" id="cats"></div>
+      <div class="row" id="chips"></div>
+      <div class="row colors" id="colors"></div>
+      <div class="row sliders" id="sliders"></div>
+    </div>
+  </div>
+</div>
+<div id="gown"><div class="gbox"><div class="gh"><b>选底图</b><button id="gownClose" class="ib">关闭</button></div><div id="gownGrid"></div><p>切换后各底图的上色会暂时保留（最近 6 张），刷新页面则清空，记得先保存</p></div></div>
+<div id="modal"><img id="outImg" alt=""><p>长按图片即可保存 · 点空白处关闭</p></div>
+
+<script>
+const GOWNS=[{"id": "d01", "w": 717, "h": 2400, "n": 94, "tw": 66}, {"id": "d02", "w": 998, "h": 2400, "n": 34, "tw": 92}, {"id": "d03", "w": 708, "h": 2400, "n": 35, "tw": 65}, {"id": "d04", "w": 783, "h": 2400, "n": 60, "tw": 72}, {"id": "d05", "w": 899, "h": 2400, "n": 27, "tw": 83}, {"id": "d06", "w": 745, "h": 2400, "n": 89, "tw": 69}, {"id": "d07", "w": 1149, "h": 2262, "n": 19, "tw": 112}, {"id": "d08", "w": 577, "h": 2400, "n": 33, "tw": 53}, {"id": "d09", "w": 1214, "h": 2143, "n": 30, "tw": 125}, {"id": "d10", "w": 1035, "h": 2400, "n": 48, "tw": 95}, {"id": "d11", "w": 1159, "h": 2244, "n": 64, "tw": 114}, {"id": "d12", "w": 1174, "h": 2214, "n": 53, "tw": 117}, {"id": "d13", "w": 1504, "h": 1729, "n": 13, "tw": 192}, {"id": "d14", "w": 911, "h": 2400, "n": 40, "tw": 84}, {"id": "d15", "w": 951, "h": 2400, "n": 39, "tw": 88}, {"id": "d16", "w": 1278, "h": 2034, "n": 28, "tw": 139}, {"id": "d17", "w": 1303, "h": 1996, "n": 19, "tw": 144}, {"id": "d18", "w": 1184, "h": 2195, "n": 28, "tw": 119}, {"id": "d19", "w": 1070, "h": 2400, "n": 57, "tw": 99}, {"id": "d20", "w": 1438, "h": 1809, "n": 63, "tw": 175}, {"id": "d21", "w": 955, "h": 2400, "n": 42, "tw": 88}];
+const MANI={"mats":[{"id":"f00","cat":"fabric","name":"t恤纯棉面料","type":"tone","file":"a/f00.webp","tw":340,"cell":0},{"id":"f01","cat":"fabric","name":"t恤纯棉面料2","type":"tone","file":"a/f01.webp","tw":340,"cell":1},{"id":"f02","cat":"fabric","name":"t恤纯棉面料3","type":"tone","file":"a/f02.webp","tw":340,"cell":2},{"id":"f03","cat":"fabric","name":"牛仔面料","type":"tone","file":"a/f03.webp","tw":340,"cell":3},{"id":"f04","cat":"fabric","name":"牛仔面料2","type":"tone","file":"a/f04.webp","tw":340,"cell":4},{"id":"f05","cat":"fabric","name":"牛仔面料3","type":"tone","file":"a/f05.webp","tw":340,"cell":5},{"id":"f06","cat":"fabric","name":"t恤纯棉面料6","type":"tone","file":"a/f06.webp","tw":340,"cell":6},{"id":"f07","cat":"fabric","name":"t恤纯棉面料7","type":"tone","file":"a/f07.webp","tw":340,"cell":7},{"id":"f08","cat":"fabric","name":"网眼麻布","type":"tone","file":"a/f08.webp","tw":340,"cell":8},{"id":"f09","cat":"fabric","name":"细眼麻布","type":"tone","file":"a/f09.webp","tw":340,"cell":9},{"id":"f10","cat":"fabric","name":"牛仔面料4","type":"tone","file":"a/f10.webp","tw":340,"cell":10},{"id":"f11","cat":"fabric","name":"细眼麻布2","type":"tone","file":"a/f11.webp","tw":340,"cell":11},{"id":"f12","cat":"fabric","name":"粗糙牛仔","type":"tone","file":"a/f12.webp","tw":340,"cell":12},{"id":"f13","cat":"fabric","name":"麻布 1","type":"tone","file":"a/f13.webp","tw":340,"cell":13},{"id":"f14","cat":"fabric","name":"皮毛","type":"tone","file":"a/f14.webp","tw":340,"cell":14},{"id":"f15","cat":"fabric","name":"毛衣","type":"tone","file":"a/f15.webp","tw":340,"cell":15},{"id":"f16","cat":"fabric","name":"毛衣2","type":"tone","file":"a/f16.webp","tw":340,"cell":16},{"id":"f17","cat":"fabric","name":"豹纹","type":"tone","file":"a/f17.webp","tw":340,"cell":17},{"id":"f18","cat":"fabric","name":"格子纹理1","type":"tone","file":"a/f18.webp","tw":340,"cell":18},{"id":"f19","cat":"fabric","name":"条纹","type":"tone","file":"a/f19.webp","tw":340,"cell":19},{"id":"f20","cat":"fabric","name":"毛衣3","type":"tone","file":"a/f20.webp","tw":340,"cell":20},{"id":"f21","cat":"fabric","name":"毛衣4","type":"tone","file":"a/f21.webp","tw":340,"cell":21},{"id":"f22","cat":"fabric","name":"格子纹理2","type":"tone","file":"a/f22.webp","tw":340,"cell":22},{"id":"f23","cat":"fabric","name":"毛衣5","type":"tone","file":"a/f23.webp","tw":340,"cell":23},{"id":"f24","cat":"fabric","name":"毛衣6","type":"tone","file":"a/f24.webp","tw":340,"cell":24},{"id":"f25","cat":"fabric","name":"格子纹理3","type":"tone","file":"a/f25.webp","tw":340,"cell":25},{"id":"f26","cat":"fabric","name":"竖纹","type":"tone","file":"a/f26.webp","tw":340,"cell":26},{"id":"f27","cat":"fabric","name":"t恤纯棉6","type":"tone","file":"a/f27.webp","tw":340,"cell":27},{"id":"f28","cat":"fabric","name":"t恤纯棉7","type":"tone","file":"a/f28.webp","tw":340,"cell":28},{"id":"f29","cat":"fabric","name":"t恤纯棉褶皱","type":"tone","file":"a/f29.webp","tw":340,"cell":29},{"id":"f30","cat":"fabric","name":"球服面料纹理","type":"tone","file":"a/f30.webp","tw":340,"cell":30},{"id":"f31","cat":"fabric","name":"毛衣7","type":"tone","file":"a/f31.webp","tw":340,"cell":31},{"id":"f32","cat":"fabric","name":"毛衣8","type":"tone","file":"a/f32.webp","tw":340,"cell":32},{"id":"f33","cat":"fabric","name":"纸张褶皱","type":"tone","file":"a/f33.webp","tw":340,"cell":33},{"id":"f34","cat":"fabric","name":"毛衣9","type":"tone","file":"a/f34.webp","tw":340,"cell":34},{"id":"f35","cat":"fabric","name":"毛衣10","type":"tone","file":"a/f35.webp","tw":340,"cell":35},{"id":"f36","cat":"fabric","name":"麻布褶皱","type":"tone","file":"a/f36.webp","tw":340,"cell":36},{"id":"f37","cat":"fabric","name":"麻布 2","type":"tone","file":"a/f37.webp","tw":340,"cell":37},{"id":"l00","cat":"lace","name":"小波点 1","type":"alpha","file":"a/l00.webp","tw":150,"inv":true,"con":0.0,"cell":0},{"id":"l01","cat":"lace","name":"小波点 2","type":"alpha","file":"a/l01.webp","tw":150,"inv":true,"con":0.0,"cell":1},{"id":"l02","cat":"lace","name":"薄纱","type":"alpha","file":"a/l02.webp","tw":207,"inv":true,"con":0.0,"cell":2},{"id":"l04","cat":"lace","name":"樱桃 1","type":"alpha","file":"a/l04.webp","tw":423,"inv":true,"con":0.0,"cell":3},{"id":"l05","cat":"lace","name":"樱桃 2","type":"alpha","file":"a/l05.webp","tw":423,"inv":true,"con":0.0,"cell":4},{"id":"l06","cat":"lace","name":"网纱 1","type":"alpha","file":"a/l06.webp","tw":480,"inv":true,"con":0.0,"cell":5},{"id":"l07","cat":"lace","name":"网格纱","type":"alpha","file":"a/l07.webp","tw":150,"inv":true,"con":0.0,"cell":6},{"id":"l08","cat":"lace","name":"小鱼网纱","type":"alpha","file":"a/l08.webp","tw":480,"inv":true,"con":0.0,"cell":7},{"id":"l09","cat":"lace","name":"火烈鸟","type":"alpha","file":"a/l09.webp","tw":480,"inv":true,"con":0.0,"cell":8},{"id":"l10","cat":"lace","name":"玫瑰","type":"alpha","file":"a/l10.webp","tw":700,"inv":true,"con":0.0,"cell":9},{"id":"l11","cat":"lace","name":"蝴蝶 1","type":"alpha","file":"a/l11.webp","tw":480,"inv":true,"con":0.0,"cell":10},{"id":"l12","cat":"lace","name":"花图","type":"alpha","file":"a/l12.webp","tw":700,"inv":true,"con":0.0,"cell":11},{"id":"l13","cat":"lace","name":"蝴蝶 2","type":"alpha","file":"a/l13.webp","tw":480,"inv":true,"con":0.0,"cell":12},{"id":"l14","cat":"lace","name":"蕾丝 1","type":"alpha","file":"a/l14.webp","tw":423,"inv":true,"con":0.0,"cell":13},{"id":"l15","cat":"lace","name":"蕾丝 2","type":"alpha","file":"a/l15.webp","tw":150,"inv":true,"con":0.0,"cell":14},{"id":"l16","cat":"lace","name":"蝴蝶 3","type":"alpha","file":"a/l16.webp","tw":480,"inv":true,"con":0.0,"cell":15},{"id":"l17","cat":"lace","name":"碎花","type":"alpha","file":"a/l17.webp","tw":423,"inv":true,"con":0.0,"cell":16},{"id":"l18","cat":"lace","name":"网纱 2","type":"alpha","file":"a/l18.webp","tw":196,"inv":true,"con":0.0,"cell":17},{"id":"l19","cat":"lace","name":"蕾丝 3","type":"alpha","file":"a/l19.webp","tw":150,"inv":true,"con":0.0,"cell":18},{"id":"l20","cat":"lace","name":"蕾丝 4","type":"alpha","file":"a/l20.webp","tw":423,"inv":true,"con":0.0,"cell":19},{"id":"l21","cat":"lace","name":"蕾丝 5","type":"alpha","file":"a/l21.webp","tw":150,"inv":true,"con":0.0,"cell":20},{"id":"l22","cat":"lace","name":"花纹 1","type":"alpha","file":"a/l22.webp","tw":297,"inv":true,"con":0.0,"cell":21},{"id":"l23","cat":"lace","name":"蕾丝 6","type":"alpha","file":"a/l23.webp","tw":700,"inv":true,"con":0.0,"cell":22},{"id":"l24","cat":"lace","name":"玫瑰网纱","type":"alpha","file":"a/l24.webp","tw":207,"inv":true,"con":0.0,"cell":23},{"id":"l25","cat":"lace","name":"花纹 2","type":"alpha","file":"a/l25.webp","tw":423,"inv":false,"con":0.0,"cell":24},{"id":"l26","cat":"lace","name":"花纹 3","type":"alpha","file":"a/l26.webp","tw":297,"inv":true,"con":0.0,"cell":25},{"id":"l27","cat":"lace","name":"蕾丝 7","type":"alpha","file":"a/l27.webp","tw":150,"inv":true,"con":0.0,"cell":26},{"id":"l28","cat":"lace","name":"蕾丝 8","type":"alpha","file":"a/l28.webp","tw":423,"inv":false,"con":0.0,"cell":27},{"id":"l29","cat":"lace","name":"花纹 4","type":"alpha","file":"a/l29.webp","tw":150,"inv":true,"con":0.0,"cell":28},{"id":"l30","cat":"lace","name":"花纹蕾丝","type":"alpha","file":"a/l30.webp","tw":196,"inv":true,"con":0.0,"cell":29},{"id":"l31","cat":"lace","name":"蕾丝 9","type":"alpha","file":"a/l31.webp","tw":423,"inv":true,"con":0.0,"cell":30},{"id":"l32","cat":"lace","name":"花纹 5","type":"alpha","file":"a/l32.webp","tw":269,"inv":true,"con":0.0,"cell":31},{"id":"l33","cat":"lace","name":"蕾丝 10","type":"alpha","file":"a/l33.webp","tw":150,"inv":true,"con":0.0,"cell":32},{"id":"l34","cat":"lace","name":"蕾丝 11","type":"alpha","file":"a/l34.webp","tw":150,"inv":true,"con":0.0,"cell":33},{"id":"l35","cat":"lace","name":"蕾丝 12","type":"alpha","file":"a/l35.webp","tw":297,"inv":true,"con":0.0,"cell":34},{"id":"l36","cat":"lace","name":"蕾丝 13","type":"alpha","file":"a/l36.webp","tw":150,"inv":true,"con":0.0,"cell":35},{"id":"l37","cat":"lace","name":"蕾丝 14","type":"alpha","file":"a/l37.webp","tw":150,"inv":true,"con":0.0,"cell":36},{"id":"l38","cat":"lace","name":"蕾丝 15","type":"alpha","file":"a/l38.webp","tw":150,"inv":true,"con":0.0,"cell":37},{"id":"l39","cat":"lace","name":"蕾丝 16","type":"alpha","file":"a/l39.webp","tw":150,"inv":true,"con":0.0,"cell":38},{"id":"l40","cat":"lace","name":"花纹 6","type":"alpha","file":"a/l40.webp","tw":150,"inv":false,"con":0.0,"cell":39},{"id":"l41","cat":"lace","name":"花纹 7","type":"alpha","file":"a/l41.webp","tw":221,"inv":false,"con":0.0,"cell":40},{"id":"l42","cat":"lace","name":"纹理 1","type":"alpha","file":"a/l42.webp","tw":150,"inv":true,"con":0.0,"cell":41},{"id":"l43","cat":"lace","name":"爱心纹理","type":"alpha","file":"a/l43.webp","tw":264,"inv":true,"con":0.0,"cell":42},{"id":"l44","cat":"lace","name":"蕾丝 17","type":"alpha","file":"a/l44.webp","tw":423,"inv":false,"con":0.0,"cell":43},{"id":"l45","cat":"lace","name":"花纹 8","type":"alpha","file":"a/l45.webp","tw":150,"inv":true,"con":0.0,"cell":44},{"id":"l46","cat":"lace","name":"花","type":"alpha","file":"a/l46.webp","tw":150,"inv":false,"con":0.0,"cell":45},{"id":"l47","cat":"lace","name":"蘑菇","type":"alpha","file":"a/l47.webp","tw":150,"inv":true,"con":0.0,"cell":46},{"id":"l48","cat":"lace","name":"图案","type":"alpha","file":"a/l48.webp","tw":150,"inv":true,"con":0.0,"cell":47},{"id":"l49","cat":"lace","name":"花纹 9","type":"alpha","file":"a/l49.webp","tw":367,"inv":true,"con":0.0,"cell":48},{"id":"l50","cat":"lace","name":"纹理 2","type":"alpha","file":"a/l50.webp","tw":150,"inv":true,"con":0.0,"cell":49},{"id":"l51","cat":"lace","name":"树叶","type":"alpha","file":"a/l51.webp","tw":150,"inv":true,"con":0.0,"cell":50},{"id":"l52","cat":"lace","name":"迷彩","type":"alpha","file":"a/l52.webp","tw":264,"inv":true,"con":0.0,"cell":51},{"id":"l53","cat":"lace","name":"树 1","type":"alpha","file":"a/l53.webp","tw":150,"inv":true,"con":0.0,"cell":52},{"id":"l54","cat":"lace","name":"树 2","type":"alpha","file":"a/l54.webp","tw":150,"inv":true,"con":0.0,"cell":53},{"id":"l55","cat":"lace","name":"叶子 1","type":"alpha","file":"a/l55.webp","tw":150,"inv":false,"con":0.0,"cell":54},{"id":"l56","cat":"lace","name":"叶纹","type":"alpha","file":"a/l56.webp","tw":150,"inv":true,"con":0.0,"cell":55},{"id":"l57","cat":"lace","name":"叶子 2","type":"alpha","file":"a/l57.webp","tw":397,"inv":false,"con":0.0,"cell":56},{"id":"l58","cat":"lace","name":"叶子 3","type":"alpha","file":"a/l58.webp","tw":150,"inv":false,"con":0.0,"cell":57},{"id":"l59","cat":"lace","name":"花纹 10","type":"alpha","file":"a/l59.webp","tw":397,"inv":true,"con":0.0,"cell":58},{"id":"l60","cat":"lace","name":"花纹 11","type":"alpha","file":"a/l60.webp","tw":150,"inv":false,"con":0.0,"cell":59},{"id":"l61","cat":"lace","name":"牡丹","type":"alpha","file":"a/l61.webp","tw":207,"inv":true,"con":0.0,"cell":60},{"id":"l62","cat":"lace","name":"花纹 12","type":"alpha","file":"a/l62.webp","tw":264,"inv":false,"con":0.0,"cell":61},{"id":"m00","cat":"fur","name":"小绒毛","type":"stamp","file":"a/m00.webp","sp":0.059,"jt":0.47,"sc":0.22,"rt":1.0,"szj":0.0,"opj":0.15,"ltj":0.09,"hj":0.0,"cnt":0.12,"ds":80,"gain":1.0,"cell":0},{"id":"m01","cat":"fur","name":"顺滑绒毛","type":"stamp","file":"a/m01.webp","sp":0.069,"jt":0.27,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.05,"cnt":0.06,"ds":80,"gain":1.0,"cell":1},{"id":"m02","cat":"fur","name":"变色绒毛","type":"stamp","file":"a/m02.webp","sp":0.045,"jt":0.51,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.12,"hj":0.21,"cnt":0.06,"ds":80,"gain":1.0,"cell":2},{"id":"m03","cat":"fur","name":"卷曲","type":"stamp","file":"a/m03.webp","sp":0.055,"jt":0.58,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":3},{"id":"m04","cat":"fur","name":"细卷毛","type":"stamp","file":"a/m04.webp","sp":0.055,"jt":0.21,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":4},{"id":"m05","cat":"fur","name":"浓密绒毛","type":"stamp","file":"a/m05.webp","sp":0.076,"jt":0.82,"sc":0.0,"rt":1.0,"szj":0.38,"opj":0.0,"ltj":0.11,"hj":0.01,"cnt":0.06,"ds":80,"gain":1.0,"cell":5},{"id":"m06","cat":"fur","name":"毛茸茸","type":"stamp","file":"a/m06.webp","sp":0.062,"jt":0.65,"sc":0.0,"rt":1.0,"szj":0.37,"opj":0.0,"ltj":0.07,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":6},{"id":"m07","cat":"fur","name":"毛楂楂","type":"stamp","file":"a/m07.webp","sp":0.054,"jt":0.68,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.04,"hj":0.01,"cnt":0.06,"ds":80,"gain":1.0,"cell":7},{"id":"m08","cat":"fur","name":"蓬松","type":"stamp","file":"a/m08.webp","sp":0.062,"jt":0.89,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.06,"ltj":0.04,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":8},{"id":"m09","cat":"fur","name":"尾巴毛","type":"stamp","file":"a/m09.webp","sp":0.063,"jt":0.3,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.14,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":9},{"id":"m10","cat":"fur","name":"卷卷毛","type":"stamp","file":"a/m10.webp","sp":0.064,"jt":0.61,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.14,"hj":0.04,"cnt":0.06,"ds":80,"gain":1.0,"cell":10},{"id":"m11","cat":"fur","name":"渐变卷毛","type":"stamp","file":"a/m11.webp","sp":0.063,"jt":0.34,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.05,"hj":0.09,"cnt":0.06,"ds":80,"gain":1.0,"cell":11},{"id":"m12","cat":"fur","name":"硬毛","type":"stamp","file":"a/m12.webp","sp":0.05,"jt":0.06,"sc":0.56,"rt":0.0,"szj":0.0,"opj":0.15,"ltj":0.23,"hj":0.0,"cnt":0.25,"ds":80,"gain":1.0,"cell":12},{"id":"m13","cat":"fur","name":"绒毛","type":"stamp","file":"a/m13.webp","sp":0.022,"jt":0.65,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.06,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":13},{"id":"m14","cat":"fur","name":"斑马","type":"alpha","file":"a/m14.webp","tw":398,"inv":true,"con":1.0,"cell":14},{"id":"m15","cat":"fur","name":"细软绒毛","type":"stamp","file":"a/m15.webp","sp":0.035,"jt":0.58,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.06,"hj":0.03,"cnt":0.06,"ds":80,"gain":1.0,"cell":15},{"id":"m16","cat":"fur","name":"卷曲绒毛","type":"stamp","file":"a/m16.webp","sp":0.062,"jt":0.5,"sc":0.58,"rt":1.0,"szj":0.0,"opj":0.15,"ltj":0.23,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":16},{"id":"m17","cat":"fur","name":"刺毛","type":"stamp","file":"a/m17.webp","sp":0.062,"jt":0.65,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.14,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":17},{"id":"m18","cat":"fur","name":"毛绒","type":"stamp","file":"a/m18.webp","sp":0.064,"jt":0.44,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.14,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":18},{"id":"m19","cat":"fur","name":"渐变硬茬毛","type":"stamp","file":"a/m19.webp","sp":0.063,"jt":0.61,"sc":0.0,"rt":1.0,"szj":0.18,"opj":0.0,"ltj":0.23,"hj":0.14,"cnt":0.06,"ds":80,"gain":1.0,"cell":19},{"id":"m20","cat":"fur","name":"豹","type":"alpha","file":"a/m20.webp","tw":400,"inv":true,"con":1.0,"cell":20},{"id":"m21","cat":"fur","name":"豹子","type":"alpha","file":"a/m21.webp","tw":398,"inv":true,"con":0.82,"cell":21},{"id":"g00","cat":"gauze","name":"纱 1","type":"stamp","file":"a/g00.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":0},{"id":"g01","cat":"gauze","name":"纱 2","type":"stamp","file":"a/g01.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":1},{"id":"g02","cat":"gauze","name":"纱 3","type":"stamp","file":"a/g02.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":2},{"id":"g03","cat":"gauze","name":"纱 4","type":"stamp","file":"a/g03.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":3},{"id":"g04","cat":"gauze","name":"纱 5","type":"stamp","file":"a/g04.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":4},{"id":"g05","cat":"gauze","name":"纱 6","type":"stamp","file":"a/g05.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":5},{"id":"g06","cat":"gauze","name":"纱 7","type":"stamp","file":"a/g06.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":6},{"id":"g07","cat":"gauze","name":"纱 8","type":"stamp","file":"a/g07.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":7},{"id":"g08","cat":"gauze","name":"纱 9","type":"stamp","file":"a/g08.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":8},{"id":"g09","cat":"gauze","name":"纱 10","type":"stamp","file":"a/g09.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":9},{"id":"g10","cat":"gauze","name":"纱 11","type":"stamp","file":"a/g10.webp","sp":0.003,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":10},{"id":"g11","cat":"gauze","name":"纱 12","type":"stamp","file":"a/g11.webp","sp":0.003,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":11},{"id":"g12","cat":"gauze","name":"纱 13","type":"stamp","file":"a/g12.webp","sp":0.003,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":12},{"id":"g13","cat":"gauze","name":"纱 14","type":"stamp","file":"a/g13.webp","sp":0.001,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":13},{"id":"g14","cat":"gauze","name":"纱 15","type":"stamp","file":"a/g14.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":14},{"id":"g15","cat":"gauze","name":"纱 16","type":"stamp","file":"a/g15.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":15},{"id":"g16","cat":"gauze","name":"纱 17","type":"stamp","file":"a/g16.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":16},{"id":"g17","cat":"gauze","name":"纱 18","type":"stamp","file":"a/g17.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":17},{"id":"g18","cat":"gauze","name":"纱 19","type":"stamp","file":"a/g18.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":18},{"id":"g19","cat":"gauze","name":"纱 20","type":"stamp","file":"a/g19.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":19},{"id":"g20","cat":"gauze","name":"纱 21","type":"stamp","file":"a/g20.webp","sp":0.003,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":20},{"id":"g21","cat":"gauze","name":"纱 22","type":"stamp","file":"a/g21.webp","sp":0.003,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":21}],"atlases":{"fabric":{"file":"a/atlas_fabric.webp","cols":10,"cell":96,"n":38},"lace":{"file":"a/atlas_lace.webp","cols":10,"cell":96,"n":62},"fur":{"file":"a/atlas_fur.webp","cols":10,"cell":96,"n":22},"gauze":{"file":"a/atlas_gauze.webp","cols":10,"cell":96,"n":22}}};
+</script>
+<script>
+(()=>{
+'use strict';
+let W=717,H=2400;
+const $=s=>document.querySelector(s);
+const mk=(w,h)=>{const c=document.createElement('canvas');c.width=Math.max(1,w|0);c.height=Math.max(1,h|0);return c};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const h2r=h=>{h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]};
+const css=(c,a=1)=>`rgba(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])},${a})`;
+const mixc=(a,b,k)=>[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];
+const BLK=[22,14,12],WHT=[255,252,246];
+function hueShift(c,deg){let[r,g,b]=c.map(v=>v/255);const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;
+  if(mx===mn)return[l*255,l*255,l*255];
+  const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h/=6;
+  h=((h+deg/360)%1+1)%1;
+  const f=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;return t<1/6?p+(q-p)*6*t:t<1/2?q:t<2/3?p+(q-p)*(2/3-t)*6:p};
+  const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;return[f(p,q,h+1/3)*255,f(p,q,h)*255,f(p,q,h-1/3)*255]}
+
+/* ================= 材质库 ================= */
+const MATS=MANI.mats,ATL=MANI.atlases,matById={};MATS.forEach(m=>matById[m.id]=m);
+const CATS=[['fabric','面料'],['lace','蕾丝薄纱'],['fur','皮草毛绒'],['gauze','纱']];
+const state={tool:'fill',cat:'fabric',mat:'f03',color:'#a63d4a',scale:100,rot:0,str:100,shade:60,size:70,op:100,dens:100,flow:90,under:false,erase:'all'};
+const lastMat={fabric:'f03',lace:'l04',fur:'m00',gauze:'g00'};
+const curMat=()=>matById[state.mat];
+const PALETTE=['#f4efe6','#e6d3bd','#d9b3a0','#e8a0b4','#c97b84','#a63d4a','#7b1f2e','#f2b8a2','#e07a3f','#e9b949','#cdbf6a','#9fb88a','#4f7a5a','#1f4d44','#7fb7c4','#3d6fa5','#233a63','#8f86c4','#5a3d7a','#8a6a4f','#4a3428','#9a9a9a','#2b2b2f','#ffffff'];
+
+function loadImage(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('载入失败 '+src));i.src=src})}
+let busyN=0;const busy=$('#busy');
+function busyOn(){busyN++;busy.style.display='block'}function busyOff(){busyN=Math.max(0,busyN-1);if(!busyN)busy.style.display='none'}
+function ensureMat(m){if(m.img)return Promise.resolve(m);if(!m._p){busyOn();m._p=loadImage(m.file).then(i=>{m.img=i;busyOff();return m}).catch(e=>{busyOff();m._p=null;throw e})}return m._p}
+
+/* 逐级缩小，避免细纹理走样 */
+function resizeTo(src,w,h){let cw=src.naturalWidth||src.width,ch=src.naturalHeight||src.height,cur=src;
+  while(cw/2>=w&&ch/2>=h){const t=mk(Math.ceil(cw/2),Math.ceil(ch/2)),x=t.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(cur,0,0,t.width,t.height);cur=t;cw=t.width;ch=t.height}
+  const o=mk(w,h),ox=o.getContext('2d');ox.imageSmoothingQuality='high';ox.drawImage(cur,0,0,w,h);return o}
+function grayOf(cv){const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;return d}
+
+const tileCache=new Map();
+function cacheSet(k,v){tileCache.set(k,v);if(tileCache.size>12)tileCache.delete(tileCache.keys().next().value)}
+/* 把灰度纹理染成颜色：tone=明暗叠加（面料），alpha=颜色+透明度（蕾丝） */
+function colorize(gray,w,h,m,col,str){const out=mk(w,h),x=out.getContext('2d'),id=x.createImageData(w,h),o=id.data,N=w*h;
+  if(m.type==='tone'){let s=0,s2=0;for(let i=0;i<N;i++){const g=gray[i*4];s+=g;s2+=g*g}const mean=s/N,std=Math.sqrt(Math.max(1,s2/N-mean*mean)),A=.55*str/100,den=std*2.2+4;
+    for(let i=0;i<N;i++){let f=clamp((gray[i*4]-mean)/den,-1.4,1.4)*A,j=i*4;
+      if(f<0){const k=1+f;o[j]=col[0]*k;o[j+1]=col[1]*k;o[j+2]=col[2]*k}else{const k=f*.85;o[j]=col[0]+(255-col[0])*k;o[j+1]=col[1]+(255-col[1])*k;o[j+2]=col[2]+(255-col[2])*k}o[j+3]=255}}
+  else{const k=Math.max(.2,1+(str-100)/60+(m.con||0)*2);
+    for(let i=0;i<N;i++){let a=gray[i*4]/255;if(m.inv)a=1-a;a=clamp((a-.5)*k+.5,0,1);const j=i*4;o[j]=col[0];o[j+1]=col[1];o[j+2]=col[2];o[j+3]=a*255}}
+  x.putImageData(id,0,0);return out}
+function tileFor(m,hex,scalePct,strPct){const iw=m.img.naturalWidth,ih=m.img.naturalHeight,disp=clamp(m.tw*scalePct/100,40,1100),Rw=Math.round(disp),Rh=Math.max(8,Math.round(disp*ih/iw));
+  const key=[m.id,hex,Rw,strPct].join('|');let t=tileCache.get(key);if(t)return t;
+  const rs=resizeTo(m.img,Rw,Rh);t=colorize(grayOf(rs),Rw,Rh,m,h2r(hex),strPct);cacheSet(key,t);return t}
+function textureLayer(m,bb){const t=mk(bb.w,bb.h),c=t.getContext('2d'),tile=tileFor(m,state.color,state.scale,state.str);
+  c.translate(-bb.x,-bb.y);const pat=c.createPattern(tile,'repeat');if(state.rot%360){try{pat.setTransform(new DOMMatrix().rotate(0,0,state.rot))}catch(_){}}
+  c.fillStyle=pat;c.fillRect(bb.x,bb.y,bb.w,bb.h);c.setTransform(1,0,0,1,0,0);return t}
+
+/* 笔头精灵（皮毛/纱）：灰度形状→带颜色的透明图 */
+const spriteCache=new Map();
+function spriteSet(m,hex,size){const B=[64,96,128,192,256,384,512].find(b=>b>=size*1.05)||512,nv=(m.ltj>.02||m.hj>.02)?5:1,key=[m.id,hex,B,nv].join('|');let s=spriteCache.get(key);if(s)return s;
+  const rs=resizeTo(m.img,B,B),g=grayOf(rs),N=B*B,base=h2r(hex);s=[];
+  for(let v=0;v<nv;v++){let col=base;if(nv>1){const l=(v/(nv-1)-.5)*2*m.ltj*1.6;col=l<0?mixc(base,BLK,-l):mixc(base,WHT,l);if(m.hj>.02)col=hueShift(col,(v/(nv-1)-.5)*m.hj*360)}
+    const c=mk(B,B),x=c.getContext('2d'),id=x.createImageData(B,B),o=id.data;for(let i=0;i<N;i++){const j=i*4;o[j]=col[0];o[j+1]=col[1];o[j+2]=col[2];o[j+3]=Math.min(255,g[j]*m.gain)}x.putImageData(id,0,0);s.push(c)}
+  spriteCache.set(key,s);if(spriteCache.size>8)spriteCache.delete(spriteCache.keys().next().value);return s}
+
+/* ================= 画布与图层 ================= */
+let L,DT,bbox,bgLabel,nLabels;
+const world=$('#world'),stage=$('#stage');
+const paper=mk(W,H),lines=mk(W,H),layers={};
+['base','decor'].forEach(n=>{const c=mk(W,H);layers[n]={c,ctx:c.getContext('2d')}});
+const hl=mk(W,H);hl.style.pointerEvents='none';
+[paper,layers.base.c,layers.decor.c,lines,hl].forEach(c=>world.appendChild(c));
+function setSize(w,h){W=w;H=h;for(const c of[paper,layers.base.c,layers.decor.c,lines,hl]){c.width=w;c.height=h;c.style.width=w+'px';c.style.height=h+'px'}world.style.width=w+'px';world.style.height=h+'px'}
+
+function mulberry(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function drawPaper(){const x=paper.getContext('2d'),r=mulberry(99);x.fillStyle='#fbf8f2';x.fillRect(0,0,W,H);
+  const id=x.getImageData(0,0,W,H),d=id.data;for(let i=0;i<d.length;i+=4){const n=(r()-.5)*7;d[i]+=n;d[i+1]+=n;d[i+2]+=n*1.1}x.putImageData(id,0,0);
+  x.globalAlpha=.05;x.strokeStyle='#8a7a66';x.lineWidth=.6;for(let i=0;i<500;i++){const px=r()*W,py=r()*H,a=r()*6.28,l=4+r()*12;x.beginPath();x.moveTo(px,py);x.lineTo(px+Math.cos(a)*l,py+Math.sin(a)*l);x.stroke()}x.globalAlpha=1}
+function computeDT(alpha){const N=W*H,d=new Float32Array(N);for(let i=0;i<N;i++)d[i]=alpha[i*4+3]>110?0:1e6;const a=1,b=1.4142;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;let v=d[i];if(v===0)continue;if(x>0)v=Math.min(v,d[i-1]+a);if(y>0){v=Math.min(v,d[i-W]+a);if(x>0)v=Math.min(v,d[i-W-1]+b);if(x<W-1)v=Math.min(v,d[i-W+1]+b)}d[i]=v}
+  for(let y=H-1;y>=0;y--)for(let x=W-1;x>=0;x--){const i=y*W+x;let v=d[i];if(v===0)continue;if(x<W-1)v=Math.min(v,d[i+1]+a);if(y<H-1){v=Math.min(v,d[i+W]+a);if(x<W-1)v=Math.min(v,d[i+W+1]+b);if(x>0)v=Math.min(v,d[i+W-1]+b)}d[i]=v}
+  return d}
+const maskCache=new Map();
+function getMask(label){let m=maskCache.get(label);if(m){maskCache.delete(label);maskCache.set(label,m);return m}
+  const bb=bbox[label],c=mk(bb.w,bb.h),x=c.getContext('2d'),id=x.createImageData(bb.w,bb.h),d=id.data;
+  for(let y=0;y<bb.h;y++){let o=(bb.y+y)*W+bb.x,j=y*bb.w*4+3;for(let xx=0;xx<bb.w;xx++,o++,j+=4)if(L[o]===label)d[j]=255}
+  x.putImageData(id,0,0);maskCache.set(label,c);if(maskCache.size>8)maskCache.delete(maskCache.keys().next().value);return c}
+function shadeCanvas(bb,k){const c=mk(bb.w,bb.h),x=c.getContext('2d'),id=x.createImageData(bb.w,bb.h),d=id.data,R1=11,R2=46;
+  for(let y=0;y<bb.h;y++){let o=(bb.y+y)*W+bb.x,j=y*bb.w*4;for(let xx=0;xx<bb.w;xx++,o++,j+=4){const dv=DT[o],t1=Math.max(0,1-dv/R1),t2=Math.max(0,1-dv/R2);const s=Math.min(.78,(.40*t1*t1+.14*t2*t2)*k);
+    d[j]=255*(1-s);d[j+1]=255*(1-s*1.04);d[j+2]=255*(1-s*1.1);d[j+3]=255}}
+  x.putImageData(id,0,0);return c}
+
+/* ---- 撤销（多图层） ---- */
+const hist=[];let hpos=0;
+function pushHist(rect,items){hist.length=hpos;hist.push({x:rect.x,y:rect.y,w:rect.w,h:rect.h,items});if(hist.length>8)hist.shift();hpos=hist.length;syncUndo()}
+function undo(){if(hpos<=0)return;const e=hist[--hpos];for(const it of e.items){const c=layers[it.layer].ctx;if(!it.after)it.after=c.getImageData(e.x,e.y,e.w,e.h);c.putImageData(it.before,e.x,e.y)}syncUndo()}
+function redo(){if(hpos>=hist.length)return;const e=hist[hpos++];for(const it of e.items)layers[it.layer].ctx.putImageData(it.after,e.x,e.y);syncUndo()}
+function syncUndo(){$('#bUndo').disabled=hpos<=0;$('#bRedo').disabled=hpos>=hist.length}
+
+/* ---- 点选填充 ---- */
+async function fillRegion(label){const m=curMat();if(!m)return;
+  try{await ensureMat(m)}catch(e){return}
+  if(m.type==='stamp')return fillStamp(label,m);
+  const bb=bbox[label],mask=getMask(label),layer=m.type==='tone'?'base':'decor',ctx=layers[layer].ctx;
+  pushHist(bb,[{layer,before:ctx.getImageData(bb.x,bb.y,bb.w,bb.h)}]);
+  const tex=textureLayer(m,bb),c=tex.getContext('2d');
+  if(m.type==='tone'&&state.shade>0&&label!==bgLabel){c.globalCompositeOperation='multiply';c.drawImage(shadeCanvas(bb,state.shade/100*1.15),0,0)}
+  c.globalCompositeOperation='destination-in';c.drawImage(mask,0,0);
+  ctx.save();ctx.globalCompositeOperation='destination-out';ctx.drawImage(mask,bb.x,bb.y);ctx.restore();
+  ctx.save();ctx.globalAlpha=state.op/100;ctx.drawImage(tex,bb.x,bb.y);ctx.restore()}
+function clearRegion(label){const bb=bbox[label],mask=getMask(label),names=state.erase==='all'?['base','decor']:['decor'];
+  pushHist(bb,names.map(n=>({layer:n,before:layers[n].ctx.getImageData(bb.x,bb.y,bb.w,bb.h)})));
+  for(const n of names){const c=layers[n].ctx;c.save();c.globalCompositeOperation='destination-out';c.drawImage(mask,bb.x,bb.y);c.restore()}}
+
+/* ---- 毛绒/纱：整块自动铺（顺着方向，裁在区域内） ---- */
+function fillStamp(label,m){
+  const bb=bbox[label],mask=getMask(label),ctx=layers.decor.ctx,size=state.size,sprites=spriteSet(m,state.color,size*1.3),
+    rnd=mulberry((Date.now()^label*977)&0x7fffffff),fl=state.flow*Math.PI/180,fx=Math.cos(fl),fy=Math.sin(fl),px=-fy,py=fx,
+    gauze=m.cat==='gauze',dens=state.dens/100;
+  const items=[{layer:'decor',before:ctx.getImageData(bb.x,bb.y,bb.w,bb.h)}];
+  const under=state.under;if(under)items.push({layer:'base',before:layers.base.ctx.getImageData(bb.x,bb.y,bb.w,bb.h)});
+  pushHist(bb,items);
+  const t=mk(bb.w,bb.h),c=t.getContext('2d'),cx=bb.x+bb.w/2,cy=bb.y+bb.h/2,half=Math.hypot(bb.w,bb.h)/2+size;
+  const pts=[],inR=(x,y)=>{x|=0;y|=0;return x>=0&&y>=0&&x<W&&y<H&&L[y*W+x]===label};
+  const near=(x,y)=>{const r=size*.3;return inR(x,y)||inR(x+r,y)||inR(x-r,y)||inR(x,y+r)||inR(x,y-r)};
+  const MAXN=5200;
+  if(gauze){const gap=size*.75/dens,step=Math.max(6,size*.22);
+    for(let u=-half;u<=half;u+=gap){const ph=rnd()*6.28,amp=size*(.25+rnd()*.5),fr=.004+rnd()*.006;
+      for(let v=-half;v<=half;v+=step){const off=Math.sin(v*fr*6.28+ph)*amp,dv=Math.cos(v*fr*6.28+ph)*amp*fr*6.28;
+        const x=cx+px*(u+off)+fx*v,y=cy+py*(u+off)+fy*v;if(!near(x,y))continue;pts.push({x,y,a:Math.atan2(fy+px*dv,fx+py*dv),k:v})}}}
+  else{const g=Math.max(5,Math.max(m.sp,.12)*size*1.7/dens);
+    for(let u=-half;u<=half;u+=g)for(let v=-half;v<=half;v+=g){const jx=(rnd()-.5)*g*1.1,jy=(rnd()-.5)*g*1.1,x=cx+px*(u+jx)+fx*(v+jy),y=cy+py*(u+jx)+fy*(v+jy);
+      if(!near(x,y))continue;pts.push({x,y,a:Math.atan2(fy,fx)+(rnd()-.5)*(m.rt>0?.8:.35),k:v+jy})}}
+  if(pts.length>MAXN){const keep=MAXN/pts.length;for(let i=pts.length-1;i>=0;i--)if(rnd()>keep)pts.splice(i,1)}
+  pts.sort((a,b)=>a.k-b.k);
+  c.translate(-bb.x,-bb.y);
+  for(const p of pts){const sz=size*(1+(rnd()-.5)*2*m.szj),spr=sprites[Math.floor(rnd()*sprites.length)];
+    c.save();c.translate(p.x,p.y);c.rotate(p.a+(gauze?0:1.5708));c.globalAlpha=1-rnd()*m.opj;c.drawImage(spr,-sz/2,-sz/2,sz,sz);c.restore()}
+  c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='destination-in';c.drawImage(mask,0,0);
+  if(under){const b=layers.base.ctx,col=mixc(h2r(state.color),BLK,.3);b.save();b.globalCompositeOperation='destination-out';b.drawImage(mask,bb.x,bb.y);b.globalCompositeOperation='source-over';
+    const u=mk(bb.w,bb.h),uc=u.getContext('2d');uc.fillStyle=css(col);uc.fillRect(0,0,bb.w,bb.h);uc.globalCompositeOperation='destination-in';uc.drawImage(mask,0,0);b.drawImage(u,bb.x,bb.y);b.restore()}
+  ctx.save();ctx.globalCompositeOperation='destination-out';ctx.drawImage(mask,bb.x,bb.y);ctx.restore();
+  ctx.save();ctx.globalAlpha=state.op/100;ctx.drawImage(t,bb.x,bb.y);ctx.restore()}
+
+/* ---- 高亮预览 ---- */
+let hlLabel=0;
+function showHL(label){if(label===hlLabel)return;hlLabel=label;const x=hl.getContext('2d');x.clearRect(0,0,W,H);if(!label)return;
+  const bb=bbox[label];x.drawImage(getMask(label),bb.x,bb.y);x.globalCompositeOperation='source-in';x.fillStyle=state.tool==='clear'?'rgba(60,60,60,.35)':'rgba(255,70,120,.38)';x.fillRect(bb.x,bb.y,bb.w,bb.h);x.globalCompositeOperation='source-over';
+  x.strokeStyle='rgba(255,40,100,.9)';x.lineWidth=2/view.s}
+function labelAt(wx,wy){return(wx>=0&&wy>=0&&wx<W&&wy<H)?L[(wy|0)*W+(wx|0)]:0}
+
+/* ================= 视图/手势 ================= */
+const view={s:1,tx:0,ty:0,mode:'width'};
+function applyView(){world.style.transform=`translate(${view.tx}px,${view.ty}px) scale(${view.s})`}
+function fitWidth(){const r=stage.getBoundingClientRect();view.s=(r.width-20)/W;view.tx=10;view.ty=10;view.mode='width';applyView();$('#bView').textContent='全身'}
+function fitAll(){const r=stage.getBoundingClientRect();view.s=(r.height-16)/H;view.tx=(r.width-W*view.s)/2;view.ty=8;view.mode='all';applyView();$('#bView').textContent='放大'}
+function toWorld(cx,cy){const r=stage.getBoundingClientRect();return[(cx-r.left-view.tx)/view.s,(cy-r.top-view.ty)/view.s]}
+function clampView(){const r=stage.getBoundingClientRect(),m=60,w=W*view.s,h=H*view.s;view.tx=clamp(view.tx,Math.min(m,r.width-w-m),Math.max(r.width-m,m));view.ty=clamp(view.ty,Math.min(m,r.height-h-m),Math.max(r.height-m,m))}
+function zoomAt(cx,cy,ns){const r=stage.getBoundingClientRect(),px=cx-r.left,py=cy-r.top;ns=clamp(ns,.08,3.5);const wx=(px-view.tx)/view.s,wy=(py-view.ty)/view.s;view.s=ns;view.tx=px-wx*ns;view.ty=py-wy*ns;clampView();applyView()}
+stage.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,view.s*Math.exp(-e.deltaY*.0015))},{passive:false});
+const ptrs=new Map();let gest=null,tap=null,panning=null;
+const aiming=()=>state.tool==='fill'||state.tool==='clear';
+stage.addEventListener('pointerdown',e=>{if(!L)return;try{stage.setPointerCapture(e.pointerId)}catch(_){}
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2){tap=null;panning=null;showHL(0);const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y)||1,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,s:view.s,tx:view.tx,ty:view.ty};return}
+  if(ptrs.size>2)return;
+  const[x,y]=toWorld(e.clientX,e.clientY);tap={x:e.clientX,y:e.clientY,moved:false,wx:x,wy:y};
+  if(state.tool==='move'||e.button===1){panning={x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty};stage.classList.add('move')}
+  else if(aiming())showHL(labelAt(x,y));
+  hideHint()});
+stage.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;p.x=e.clientX;p.y=e.clientY;
+  if(gest&&ptrs.size>=2){const[a,b]=[...ptrs.values()],d=Math.hypot(a.x-b.x,a.y-b.y)||1,cx=(a.x+b.x)/2,cy=(a.y+b.y)/2,r=stage.getBoundingClientRect();
+    const ns=clamp(gest.s*d/gest.d,.08,3.5),wx=(gest.cx-r.left-gest.tx)/gest.s,wy=(gest.cy-r.top-gest.ty)/gest.s;view.s=ns;view.tx=cx-r.left-wx*ns;view.ty=cy-r.top-wy*ns;clampView();applyView();return}
+  if(!tap)return;
+  if(panning){view.tx=panning.tx+(e.clientX-panning.x);view.ty=panning.ty+(e.clientY-panning.y);clampView();applyView();return}
+  if(aiming()){const[x,y]=toWorld(e.clientX,e.clientY);tap.wx=x;tap.wy=y;showHL(labelAt(x,y))}});
+function release(e,cancel){const had=ptrs.delete(e.pointerId);if(!had)return;
+  if(gest){if(ptrs.size<2)gest=null;if(ptrs.size===0)tap=null;return}
+  if(!tap)return;
+  if(!cancel&&!panning&&aiming()){const label=labelAt(tap.wx,tap.wy);if(label){if(state.tool==='fill')fillRegion(label);else clearRegion(label)}}
+  showHL(0);panning=null;tap=null;stage.classList.remove('move')}
+stage.addEventListener('pointerup',e=>release(e));stage.addEventListener('pointercancel',e=>release(e,true));
+
+/* ================= 界面 ================= */
+let hintOn=true;function hideHint(){if(!hintOn)return;hintOn=false;$('#hint').style.opacity=0}setTimeout(hideHint,7000);
+const atlasImg={};
+function buildColors(){const row=$('#colors');row.innerHTML='';
+  PALETTE.forEach(c=>{const b=document.createElement('button');b.className='sw'+(c===state.color?' on':'');b.style.background=c;b.dataset.c=c;b.title=c;row.appendChild(b)});
+  const p=document.createElement('label');p.className='pick';p.title='自定义颜色';p.innerHTML='<input type="color">';row.appendChild(p);
+  p.querySelector('input').value=state.color;p.querySelector('input').addEventListener('input',e=>setColor(e.target.value));
+  row.addEventListener('click',e=>{const b=e.target.closest('.sw');if(b)setColor(b.dataset.c)})}
+let thumbT=0;
+function setColor(c){state.color=c;document.querySelectorAll('.sw').forEach(s=>s.classList.toggle('on',s.dataset.c===c));const pk=document.querySelector('.pick input');if(pk&&/^#[0-9a-f]{6}$/i.test(c))pk.value=c;clearTimeout(thumbT);thumbT=setTimeout(drawChips,60)}
+
+function drawChip(cv,m){const w=cv.width,h=cv.height,c=cv.getContext('2d'),at=ATL[m.cat],img=atlasImg[m.cat],col=h2r(state.color),lum=.3*col[0]+.59*col[1]+.11*col[2];
+  c.fillStyle=lum>165?'#6c655f':'#ece7de';c.fillRect(0,0,w,h);if(!img)return;
+  const cs=at.cell,sx=(m.cell%at.cols)*cs,sy=Math.floor(m.cell/at.cols)*cs,t=mk(cs,cs),x=t.getContext('2d');x.drawImage(img,sx,sy,cs,cs,0,0,cs,cs);
+  const id=x.getImageData(0,0,cs,cs),d=id.data,N=cs*cs;
+  if(m.type==='tone'){let s=0,s2=0;for(let i=0;i<N;i++){const g=d[i*4];s+=g;s2+=g*g}const mean=s/N,std=Math.sqrt(Math.max(1,s2/N-mean*mean)),den=std*2.2+4;
+    for(let i=0;i<N;i++){const f=clamp((d[i*4]-mean)/den,-1.4,1.4)*.55,j=i*4;if(f<0){const k=1+f;d[j]=col[0]*k;d[j+1]=col[1]*k;d[j+2]=col[2]*k}else{const k=f*.85;d[j]=col[0]+(255-col[0])*k;d[j+1]=col[1]+(255-col[1])*k;d[j+2]=col[2]+(255-col[2])*k}d[j+3]=255}}
+  else{const stamp=m.type==='stamp',gain=stamp?Math.max(1,m.gain*.8):1;
+    for(let i=0;i<N;i++){const j=i*4;let a=d[j]/255;if(!stamp){if(m.inv)a=1-a;a=clamp((a-.5)*(1+(m.con||0)*2)+.5,0,1)}else a=Math.min(1,a*gain);d[j]=col[0];d[j+1]=col[1];d[j+2]=col[2];d[j+3]=a*255}}
+  x.putImageData(id,0,0);const s=Math.max(w,h)/cs;c.drawImage(t,(w-cs*s)/2,(h-cs*s)/2,cs*s,cs*s)}
+function drawChips(){document.querySelectorAll('#chips .chip').forEach(b=>drawChip(b.querySelector('canvas'),matById[b.dataset.id]))}
+function buildCats(){const row=$('#cats');row.innerHTML='';CATS.forEach(([id,name])=>{const b=document.createElement('button');b.className='cat'+(id===state.cat?' on':'');b.dataset.c=id;b.textContent=name;row.appendChild(b)})}
+function buildChips(){const row=$('#chips');row.innerHTML='';
+  MATS.filter(m=>m.cat===state.cat).forEach(m=>{const b=document.createElement('button');b.className='chip'+(m.id===state.mat?' on':'');b.dataset.id=m.id;const cv=document.createElement('canvas');cv.width=104;cv.height=84;b.appendChild(cv);const sp=document.createElement('span');sp.textContent=m.name;b.appendChild(sp);row.appendChild(b)});
+  drawChips();const on=row.querySelector('.on');if(on)on.scrollIntoView({inline:'center',block:'nearest'})}
+$('#cats').addEventListener('click',e=>{const b=e.target.closest('.cat');if(!b)return;state.cat=b.dataset.c;setMat(lastMat[state.cat],true)});
+$('#chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(b)setMat(b.dataset.id)});
+
+function setMat(id){const m=matById[id];if(!m)return;state.mat=id;state.cat=m.cat;lastMat[m.cat]=id;
+  if(m.type==='stamp')state.size=m.ds;
+  state.under=false;ensureMat(m).catch(()=>{});buildCats();buildChips();syncTools();buildSliders()}
+function syncTools(){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===state.tool));
+  const showMat=state.tool==='fill';$('#cats').style.display=showMat?'':'none';$('#chips').style.display=showMat?'':'none';$('#colors').style.display=showMat?'':'none';stage.style.cursor=state.tool==='move'?'grab':'crosshair'}
+function setTool(t){state.tool=t;showHL(0);syncTools();buildSliders()}
+$('#tools').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b)setTool(b.dataset.t)});
+
+function buildSliders(){const s=$('#sliders');s.innerHTML='';const m=curMat(),t=state.tool,stamp=m.type==='stamp',tone=m.type==='tone';
+  const rng=(label,key,min,max,unit)=>{const l=document.createElement('label');l.innerHTML=`${label}<input type="range" min="${min}" max="${max}" value="${state[key]}"><b>${state[key]}${unit}</b>`;
+    const inp=l.querySelector('input'),out=l.querySelector('b');inp.addEventListener('input',()=>{state[key]=+inp.value;out.textContent=inp.value+unit});s.appendChild(l)};
+  const seg=()=>{const d=document.createElement('span');d.className='seg';d.innerHTML=`<button data-v="all" class="${state.erase==='all'?'on':''}">全部图层</button><button data-v="decor" class="${state.erase==='decor'?'on':''}">仅装饰层</button>`;
+    d.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state.erase=b.dataset.v;d.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});s.appendChild(d)};
+  const under=()=>{const b=document.createElement('button');b.className='lock'+(state.under?' on':'');b.textContent=state.under?'✓ 铺底色':'铺底色';b.addEventListener('click',()=>{state.under=!state.under;b.className='lock'+(state.under?' on':'');b.textContent=state.under?'✓ 铺底色':'铺底色'});s.appendChild(b)};
+  if(t==='fill'){if(stamp){rng('大小','size',20,300,'');rng('密度','dens',40,200,'%');rng('方向','flow',0,359,'°');rng('浓度','op',10,100,'%');under()}
+    else{rng('纹理大小','scale',30,250,'%');rng('方向','rot',0,360,'°');rng('纹理强度','str',0,200,'%');if(tone)rng('立体感','shade',0,100,'');rng('浓度','op',10,100,'%')}}
+  else if(t==='clear'){const sp=document.createElement('span');sp.textContent='点区域清除：';s.appendChild(sp);seg()}
+  else{const sp=document.createElement('span');sp.textContent='拖动画面移动 · 双指缩放 · 面料在底层，蕾丝/皮草/纱在上层';s.appendChild(sp)}}
+
+$('#fold').addEventListener('click',()=>{const p=$('#panel');p.classList.toggle('collapsed');$('#fold').textContent=p.classList.contains('collapsed')?'⌃':'⌄';setTimeout(()=>{if(view.mode==='all')fitAll()},30)});
+$('#bUndo').addEventListener('click',undo);$('#bRedo').addEventListener('click',redo);
+$('#bView').addEventListener('click',()=>{view.mode==='width'?fitAll():fitWidth()});
+window.addEventListener('resize',()=>{view.mode==='all'?fitAll():(view.mode==='width'&&fitWidth())});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();e.shiftKey?redo():undo()}});
+$('#bSave').addEventListener('click',()=>{const o=mk(W,H),x=o.getContext('2d');x.drawImage(paper,0,0);x.drawImage(layers.base.c,0,0);x.drawImage(layers.decor.c,0,0);x.drawImage(lines,0,0);
+  o.toBlob(b=>{$('#outImg').src=URL.createObjectURL(b);$('#modal').classList.add('on')},'image/png')});
+$('#modal').addEventListener('click',e=>{if(e.target.id!=='outImg')$('#modal').classList.remove('on')});
+
+/* ================= 载入 / 选底图 ================= */
+const stash=new Map();let curGown=null;
+function stashCur(){if(!curGown)return;const mkc=src=>{const c=mk(W,H);c.getContext('2d').drawImage(src,0,0);return c};
+  stash.delete(curGown);stash.set(curGown,{base:mkc(layers.base.c),decor:mkc(layers.decor.c)});if(stash.size>6)stash.delete(stash.keys().next().value)}
+async function loadGown(id){const g=GOWNS.find(x=>x.id===id);if(!g)return;const ld=$('#loading');ld.textContent='载入线稿中…';ld.style.display='block';
+  try{const[li,lb]=await Promise.all([loadImage('d/'+id+'_s.png'),loadImage('d/'+id+'_l.png')]);
+    stashCur();setSize(g.w,g.h);maskCache.clear();hlLabel=0;hist.length=0;hpos=0;syncUndo();
+    lines.getContext('2d').drawImage(li,0,0);
+    const lc=mk(W,H),lx=lc.getContext('2d');lx.drawImage(lb,0,0);const d=lx.getImageData(0,0,W,H).data;L=new Uint16Array(W*H);
+    nLabels=0;for(let i=0;i<W*H;i++){const v=d[i*4]|(d[i*4+1]<<8);L[i]=v;if(v>nLabels)nLabels=v}
+    bbox=new Array(nLabels+1);for(let l=1;l<=nLabels;l++)bbox[l]={x0:W,y0:H,x1:-1,y1:-1};
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=L[y*W+x];if(!v)continue;const b=bbox[v];if(x<b.x0)b.x0=x;if(x>b.x1)b.x1=x;if(y<b.y0)b.y0=y;if(y>b.y1)b.y1=y}
+    for(let l=1;l<=nLabels;l++){const b=bbox[l];bbox[l]=b.x1<0?{x:0,y:0,w:1,h:1}:{x:b.x0,y:b.y0,w:b.x1-b.x0+1,h:b.y1-b.y0+1}}
+    bgLabel=L[5*W+5];DT=computeDT(lines.getContext('2d').getImageData(0,0,W,H).data);
+    drawPaper();const st=stash.get(id);if(st){layers.base.ctx.drawImage(st.base,0,0);layers.decor.ctx.drawImage(st.decor,0,0)}
+    curGown=id;fitWidth();document.querySelectorAll('#gown .gi').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+    ld.style.display='none';window.__ready=true}
+  catch(err){ld.textContent='载入失败：'+err.message}}
+function buildGowns(){const g=$('#gownGrid');g.innerHTML='';GOWNS.forEach((x,i)=>{const b=document.createElement('button');b.className='gi';b.dataset.id=x.id;b.innerHTML=`<img src="d/${x.id}_t.webp" alt=""><span>款 ${i+1}</span>`;g.appendChild(b)})}
+$('#bGown').addEventListener('click',()=>$('#gown').classList.add('on'));
+$('#gown').addEventListener('click',e=>{const b=e.target.closest('.gi');if(b){$('#gown').classList.remove('on');if(b.dataset.id!==curGown)loadGown(b.dataset.id)}else if(e.target.id==='gown'||e.target.closest('#gownClose'))$('#gown').classList.remove('on')});
+(async()=>{
+  buildColors();buildCats();buildChips();buildGowns();syncTools();buildSliders();
+  const keys=Object.keys(ATL);
+  Promise.all(keys.map(k=>loadImage(ATL[k].file).then(i=>{atlasImg[k]=i}).catch(()=>{}))).then(drawChips);
+  ensureMat(curMat()).catch(()=>{});
+  await loadGown(GOWNS[0].id)
+})().catch(err=>{$('#loading').textContent='载入失败：'+err.message});
+window.__dbg={fillStamp,showHL,applyView,state,get L(){return L},get bbox(){return bbox},get W(){return W},get H(){return H},loadGown,view,fillRegion,setTool,setMat,setColor,layers,get bg(){return bgLabel},ensureMat,matById};
+})();
+</script>
+</body>
+</html>
