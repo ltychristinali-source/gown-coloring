@@ -73,7 +73,7 @@ header h1 small{font-weight:400;color:var(--muted);margin-left:6px;font-size:11p
 <body>
 <div id="app">
   <header>
-    <h1>服装设计填色<small>面料 · 蕾丝 · 皮草</small></h1>
+    <h1>服装设计填色<small>质地 · 叠加</small></h1>
     <button class="ib" id="bGown">底图</button>
     <button class="ib" id="bUndo" title="撤销" disabled>↶</button>
     <button class="ib" id="bRedo" title="重做" disabled>↷</button>
@@ -82,13 +82,14 @@ header h1 small{font-weight:400;color:var(--muted);margin-left:6px;font-size:11p
   </header>
   <div id="stage">
     <div id="world"></div>
-    <div id="hint">按住看高亮范围 · 松手填充 · 拖动可换区域 · 双指缩放</div>
+    <div id="hint">「质地」铺底色 · 「叠加」蕾丝/皮草/纱可反复叠 · 按住预览，松手填</div>
     <div id="busy">载入纹理…</div>
     <div id="loading">载入线稿中…</div>
   </div>
   <div id="panel">
     <div class="row tabs" id="tools">
-      <button class="tab on" data-t="fill">填充</button>
+      <button class="tab on" data-t="fill">质地</button>
+      <button class="tab" data-t="over">叠加</button>
       <button class="tab" data-t="clear">清除</button>
       <button class="tab" data-t="move">移动</button>
       <button id="fold" title="收起">⌄</button>
@@ -105,7 +106,7 @@ header h1 small{font-weight:400;color:var(--muted);margin-left:6px;font-size:11p
 <div id="modal"><img id="outImg" alt=""><p>长按图片即可保存 · 点空白处关闭</p></div>
 
 <script>
-const GOWNS=[{"id": "d01", "w": 717, "h": 2400, "n": 94, "tw": 66}, {"id": "d02", "w": 998, "h": 2400, "n": 34, "tw": 92}, {"id": "d03", "w": 708, "h": 2400, "n": 35, "tw": 65}, {"id": "d04", "w": 783, "h": 2400, "n": 60, "tw": 72}, {"id": "d05", "w": 899, "h": 2400, "n": 27, "tw": 83}, {"id": "d06", "w": 745, "h": 2400, "n": 89, "tw": 69}, {"id": "d07", "w": 1149, "h": 2262, "n": 19, "tw": 112}, {"id": "d08", "w": 577, "h": 2400, "n": 33, "tw": 53}, {"id": "d09", "w": 1214, "h": 2143, "n": 30, "tw": 125}, {"id": "d10", "w": 1035, "h": 2400, "n": 48, "tw": 95}, {"id": "d11", "w": 1159, "h": 2244, "n": 64, "tw": 114}, {"id": "d12", "w": 1174, "h": 2214, "n": 53, "tw": 117}, {"id": "d13", "w": 1504, "h": 1729, "n": 13, "tw": 192}, {"id": "d14", "w": 911, "h": 2400, "n": 40, "tw": 84}, {"id": "d15", "w": 951, "h": 2400, "n": 39, "tw": 88}, {"id": "d16", "w": 1278, "h": 2034, "n": 28, "tw": 139}, {"id": "d17", "w": 1303, "h": 1996, "n": 19, "tw": 144}, {"id": "d18", "w": 1184, "h": 2195, "n": 28, "tw": 119}, {"id": "d19", "w": 1070, "h": 2400, "n": 57, "tw": 99}, {"id": "d20", "w": 1438, "h": 1809, "n": 63, "tw": 175}, {"id": "d21", "w": 955, "h": 2400, "n": 42, "tw": 88}];
+const GOWNS=[{"id": "d01", "w": 717, "h": 2400, "n": 210, "tw": 66}, {"id": "d02", "w": 998, "h": 2400, "n": 58, "tw": 92}, {"id": "d03", "w": 708, "h": 2400, "n": 47, "tw": 65}, {"id": "d04", "w": 783, "h": 2400, "n": 205, "tw": 72}, {"id": "d05", "w": 899, "h": 2400, "n": 60, "tw": 83}, {"id": "d06", "w": 745, "h": 2400, "n": 192, "tw": 69}, {"id": "d07", "w": 1149, "h": 2262, "n": 41, "tw": 112}, {"id": "d08", "w": 577, "h": 2400, "n": 71, "tw": 53}, {"id": "d09", "w": 1214, "h": 2143, "n": 61, "tw": 125}, {"id": "d10", "w": 1035, "h": 2400, "n": 145, "tw": 95}, {"id": "d11", "w": 1159, "h": 2244, "n": 153, "tw": 114}, {"id": "d12", "w": 1174, "h": 2214, "n": 155, "tw": 117}, {"id": "d13", "w": 1504, "h": 1729, "n": 43, "tw": 192}, {"id": "d14", "w": 911, "h": 2400, "n": 71, "tw": 84}, {"id": "d15", "w": 951, "h": 2400, "n": 62, "tw": 88}, {"id": "d16", "w": 1278, "h": 2034, "n": 84, "tw": 139}, {"id": "d17", "w": 1303, "h": 1996, "n": 31, "tw": 144}, {"id": "d18", "w": 1184, "h": 2195, "n": 31, "tw": 119}, {"id": "d19", "w": 1070, "h": 2400, "n": 204, "tw": 99}, {"id": "d20", "w": 1438, "h": 1809, "n": 183, "tw": 175}, {"id": "d21", "w": 955, "h": 2400, "n": 181, "tw": 88}];
 const MANI={"mats":[{"id":"f00","cat":"fabric","name":"t恤纯棉面料","type":"tone","file":"a/f00.webp","tw":340,"cell":0},{"id":"f01","cat":"fabric","name":"t恤纯棉面料2","type":"tone","file":"a/f01.webp","tw":340,"cell":1},{"id":"f02","cat":"fabric","name":"t恤纯棉面料3","type":"tone","file":"a/f02.webp","tw":340,"cell":2},{"id":"f03","cat":"fabric","name":"牛仔面料","type":"tone","file":"a/f03.webp","tw":340,"cell":3},{"id":"f04","cat":"fabric","name":"牛仔面料2","type":"tone","file":"a/f04.webp","tw":340,"cell":4},{"id":"f05","cat":"fabric","name":"牛仔面料3","type":"tone","file":"a/f05.webp","tw":340,"cell":5},{"id":"f06","cat":"fabric","name":"t恤纯棉面料6","type":"tone","file":"a/f06.webp","tw":340,"cell":6},{"id":"f07","cat":"fabric","name":"t恤纯棉面料7","type":"tone","file":"a/f07.webp","tw":340,"cell":7},{"id":"f08","cat":"fabric","name":"网眼麻布","type":"tone","file":"a/f08.webp","tw":340,"cell":8},{"id":"f09","cat":"fabric","name":"细眼麻布","type":"tone","file":"a/f09.webp","tw":340,"cell":9},{"id":"f10","cat":"fabric","name":"牛仔面料4","type":"tone","file":"a/f10.webp","tw":340,"cell":10},{"id":"f11","cat":"fabric","name":"细眼麻布2","type":"tone","file":"a/f11.webp","tw":340,"cell":11},{"id":"f12","cat":"fabric","name":"粗糙牛仔","type":"tone","file":"a/f12.webp","tw":340,"cell":12},{"id":"f13","cat":"fabric","name":"麻布 1","type":"tone","file":"a/f13.webp","tw":340,"cell":13},{"id":"f14","cat":"fabric","name":"皮毛","type":"tone","file":"a/f14.webp","tw":340,"cell":14},{"id":"f15","cat":"fabric","name":"毛衣","type":"tone","file":"a/f15.webp","tw":340,"cell":15},{"id":"f16","cat":"fabric","name":"毛衣2","type":"tone","file":"a/f16.webp","tw":340,"cell":16},{"id":"f17","cat":"fabric","name":"豹纹","type":"tone","file":"a/f17.webp","tw":340,"cell":17},{"id":"f18","cat":"fabric","name":"格子纹理1","type":"tone","file":"a/f18.webp","tw":340,"cell":18},{"id":"f19","cat":"fabric","name":"条纹","type":"tone","file":"a/f19.webp","tw":340,"cell":19},{"id":"f20","cat":"fabric","name":"毛衣3","type":"tone","file":"a/f20.webp","tw":340,"cell":20},{"id":"f21","cat":"fabric","name":"毛衣4","type":"tone","file":"a/f21.webp","tw":340,"cell":21},{"id":"f22","cat":"fabric","name":"格子纹理2","type":"tone","file":"a/f22.webp","tw":340,"cell":22},{"id":"f23","cat":"fabric","name":"毛衣5","type":"tone","file":"a/f23.webp","tw":340,"cell":23},{"id":"f24","cat":"fabric","name":"毛衣6","type":"tone","file":"a/f24.webp","tw":340,"cell":24},{"id":"f25","cat":"fabric","name":"格子纹理3","type":"tone","file":"a/f25.webp","tw":340,"cell":25},{"id":"f26","cat":"fabric","name":"竖纹","type":"tone","file":"a/f26.webp","tw":340,"cell":26},{"id":"f27","cat":"fabric","name":"t恤纯棉6","type":"tone","file":"a/f27.webp","tw":340,"cell":27},{"id":"f28","cat":"fabric","name":"t恤纯棉7","type":"tone","file":"a/f28.webp","tw":340,"cell":28},{"id":"f29","cat":"fabric","name":"t恤纯棉褶皱","type":"tone","file":"a/f29.webp","tw":340,"cell":29},{"id":"f30","cat":"fabric","name":"球服面料纹理","type":"tone","file":"a/f30.webp","tw":340,"cell":30},{"id":"f31","cat":"fabric","name":"毛衣7","type":"tone","file":"a/f31.webp","tw":340,"cell":31},{"id":"f32","cat":"fabric","name":"毛衣8","type":"tone","file":"a/f32.webp","tw":340,"cell":32},{"id":"f33","cat":"fabric","name":"纸张褶皱","type":"tone","file":"a/f33.webp","tw":340,"cell":33},{"id":"f34","cat":"fabric","name":"毛衣9","type":"tone","file":"a/f34.webp","tw":340,"cell":34},{"id":"f35","cat":"fabric","name":"毛衣10","type":"tone","file":"a/f35.webp","tw":340,"cell":35},{"id":"f36","cat":"fabric","name":"麻布褶皱","type":"tone","file":"a/f36.webp","tw":340,"cell":36},{"id":"f37","cat":"fabric","name":"麻布 2","type":"tone","file":"a/f37.webp","tw":340,"cell":37},{"id":"l00","cat":"lace","name":"小波点 1","type":"alpha","file":"a/l00.webp","tw":150,"inv":true,"con":0.0,"cell":0},{"id":"l01","cat":"lace","name":"小波点 2","type":"alpha","file":"a/l01.webp","tw":150,"inv":true,"con":0.0,"cell":1},{"id":"l02","cat":"lace","name":"薄纱","type":"alpha","file":"a/l02.webp","tw":207,"inv":true,"con":0.0,"cell":2},{"id":"l04","cat":"lace","name":"樱桃 1","type":"alpha","file":"a/l04.webp","tw":423,"inv":true,"con":0.0,"cell":3},{"id":"l05","cat":"lace","name":"樱桃 2","type":"alpha","file":"a/l05.webp","tw":423,"inv":true,"con":0.0,"cell":4},{"id":"l06","cat":"lace","name":"网纱 1","type":"alpha","file":"a/l06.webp","tw":480,"inv":true,"con":0.0,"cell":5},{"id":"l07","cat":"lace","name":"网格纱","type":"alpha","file":"a/l07.webp","tw":150,"inv":true,"con":0.0,"cell":6},{"id":"l08","cat":"lace","name":"小鱼网纱","type":"alpha","file":"a/l08.webp","tw":480,"inv":true,"con":0.0,"cell":7},{"id":"l09","cat":"lace","name":"火烈鸟","type":"alpha","file":"a/l09.webp","tw":480,"inv":true,"con":0.0,"cell":8},{"id":"l10","cat":"lace","name":"玫瑰","type":"alpha","file":"a/l10.webp","tw":700,"inv":true,"con":0.0,"cell":9},{"id":"l11","cat":"lace","name":"蝴蝶 1","type":"alpha","file":"a/l11.webp","tw":480,"inv":true,"con":0.0,"cell":10},{"id":"l12","cat":"lace","name":"花图","type":"alpha","file":"a/l12.webp","tw":700,"inv":true,"con":0.0,"cell":11},{"id":"l13","cat":"lace","name":"蝴蝶 2","type":"alpha","file":"a/l13.webp","tw":480,"inv":true,"con":0.0,"cell":12},{"id":"l14","cat":"lace","name":"蕾丝 1","type":"alpha","file":"a/l14.webp","tw":423,"inv":true,"con":0.0,"cell":13},{"id":"l15","cat":"lace","name":"蕾丝 2","type":"alpha","file":"a/l15.webp","tw":150,"inv":true,"con":0.0,"cell":14},{"id":"l16","cat":"lace","name":"蝴蝶 3","type":"alpha","file":"a/l16.webp","tw":480,"inv":true,"con":0.0,"cell":15},{"id":"l17","cat":"lace","name":"碎花","type":"alpha","file":"a/l17.webp","tw":423,"inv":true,"con":0.0,"cell":16},{"id":"l18","cat":"lace","name":"网纱 2","type":"alpha","file":"a/l18.webp","tw":196,"inv":true,"con":0.0,"cell":17},{"id":"l19","cat":"lace","name":"蕾丝 3","type":"alpha","file":"a/l19.webp","tw":150,"inv":true,"con":0.0,"cell":18},{"id":"l20","cat":"lace","name":"蕾丝 4","type":"alpha","file":"a/l20.webp","tw":423,"inv":true,"con":0.0,"cell":19},{"id":"l21","cat":"lace","name":"蕾丝 5","type":"alpha","file":"a/l21.webp","tw":150,"inv":true,"con":0.0,"cell":20},{"id":"l22","cat":"lace","name":"花纹 1","type":"alpha","file":"a/l22.webp","tw":297,"inv":true,"con":0.0,"cell":21},{"id":"l23","cat":"lace","name":"蕾丝 6","type":"alpha","file":"a/l23.webp","tw":700,"inv":true,"con":0.0,"cell":22},{"id":"l24","cat":"lace","name":"玫瑰网纱","type":"alpha","file":"a/l24.webp","tw":207,"inv":true,"con":0.0,"cell":23},{"id":"l25","cat":"lace","name":"花纹 2","type":"alpha","file":"a/l25.webp","tw":423,"inv":false,"con":0.0,"cell":24},{"id":"l26","cat":"lace","name":"花纹 3","type":"alpha","file":"a/l26.webp","tw":297,"inv":true,"con":0.0,"cell":25},{"id":"l27","cat":"lace","name":"蕾丝 7","type":"alpha","file":"a/l27.webp","tw":150,"inv":true,"con":0.0,"cell":26},{"id":"l28","cat":"lace","name":"蕾丝 8","type":"alpha","file":"a/l28.webp","tw":423,"inv":false,"con":0.0,"cell":27},{"id":"l29","cat":"lace","name":"花纹 4","type":"alpha","file":"a/l29.webp","tw":150,"inv":true,"con":0.0,"cell":28},{"id":"l30","cat":"lace","name":"花纹蕾丝","type":"alpha","file":"a/l30.webp","tw":196,"inv":true,"con":0.0,"cell":29},{"id":"l31","cat":"lace","name":"蕾丝 9","type":"alpha","file":"a/l31.webp","tw":423,"inv":true,"con":0.0,"cell":30},{"id":"l32","cat":"lace","name":"花纹 5","type":"alpha","file":"a/l32.webp","tw":269,"inv":true,"con":0.0,"cell":31},{"id":"l33","cat":"lace","name":"蕾丝 10","type":"alpha","file":"a/l33.webp","tw":150,"inv":true,"con":0.0,"cell":32},{"id":"l34","cat":"lace","name":"蕾丝 11","type":"alpha","file":"a/l34.webp","tw":150,"inv":true,"con":0.0,"cell":33},{"id":"l35","cat":"lace","name":"蕾丝 12","type":"alpha","file":"a/l35.webp","tw":297,"inv":true,"con":0.0,"cell":34},{"id":"l36","cat":"lace","name":"蕾丝 13","type":"alpha","file":"a/l36.webp","tw":150,"inv":true,"con":0.0,"cell":35},{"id":"l37","cat":"lace","name":"蕾丝 14","type":"alpha","file":"a/l37.webp","tw":150,"inv":true,"con":0.0,"cell":36},{"id":"l38","cat":"lace","name":"蕾丝 15","type":"alpha","file":"a/l38.webp","tw":150,"inv":true,"con":0.0,"cell":37},{"id":"l39","cat":"lace","name":"蕾丝 16","type":"alpha","file":"a/l39.webp","tw":150,"inv":true,"con":0.0,"cell":38},{"id":"l40","cat":"lace","name":"花纹 6","type":"alpha","file":"a/l40.webp","tw":150,"inv":false,"con":0.0,"cell":39},{"id":"l41","cat":"lace","name":"花纹 7","type":"alpha","file":"a/l41.webp","tw":221,"inv":false,"con":0.0,"cell":40},{"id":"l42","cat":"lace","name":"纹理 1","type":"alpha","file":"a/l42.webp","tw":150,"inv":true,"con":0.0,"cell":41},{"id":"l43","cat":"lace","name":"爱心纹理","type":"alpha","file":"a/l43.webp","tw":264,"inv":true,"con":0.0,"cell":42},{"id":"l44","cat":"lace","name":"蕾丝 17","type":"alpha","file":"a/l44.webp","tw":423,"inv":false,"con":0.0,"cell":43},{"id":"l45","cat":"lace","name":"花纹 8","type":"alpha","file":"a/l45.webp","tw":150,"inv":true,"con":0.0,"cell":44},{"id":"l46","cat":"lace","name":"花","type":"alpha","file":"a/l46.webp","tw":150,"inv":false,"con":0.0,"cell":45},{"id":"l47","cat":"lace","name":"蘑菇","type":"alpha","file":"a/l47.webp","tw":150,"inv":true,"con":0.0,"cell":46},{"id":"l48","cat":"lace","name":"图案","type":"alpha","file":"a/l48.webp","tw":150,"inv":true,"con":0.0,"cell":47},{"id":"l49","cat":"lace","name":"花纹 9","type":"alpha","file":"a/l49.webp","tw":367,"inv":true,"con":0.0,"cell":48},{"id":"l50","cat":"lace","name":"纹理 2","type":"alpha","file":"a/l50.webp","tw":150,"inv":true,"con":0.0,"cell":49},{"id":"l51","cat":"lace","name":"树叶","type":"alpha","file":"a/l51.webp","tw":150,"inv":true,"con":0.0,"cell":50},{"id":"l52","cat":"lace","name":"迷彩","type":"alpha","file":"a/l52.webp","tw":264,"inv":true,"con":0.0,"cell":51},{"id":"l53","cat":"lace","name":"树 1","type":"alpha","file":"a/l53.webp","tw":150,"inv":true,"con":0.0,"cell":52},{"id":"l54","cat":"lace","name":"树 2","type":"alpha","file":"a/l54.webp","tw":150,"inv":true,"con":0.0,"cell":53},{"id":"l55","cat":"lace","name":"叶子 1","type":"alpha","file":"a/l55.webp","tw":150,"inv":false,"con":0.0,"cell":54},{"id":"l56","cat":"lace","name":"叶纹","type":"alpha","file":"a/l56.webp","tw":150,"inv":true,"con":0.0,"cell":55},{"id":"l57","cat":"lace","name":"叶子 2","type":"alpha","file":"a/l57.webp","tw":397,"inv":false,"con":0.0,"cell":56},{"id":"l58","cat":"lace","name":"叶子 3","type":"alpha","file":"a/l58.webp","tw":150,"inv":false,"con":0.0,"cell":57},{"id":"l59","cat":"lace","name":"花纹 10","type":"alpha","file":"a/l59.webp","tw":397,"inv":true,"con":0.0,"cell":58},{"id":"l60","cat":"lace","name":"花纹 11","type":"alpha","file":"a/l60.webp","tw":150,"inv":false,"con":0.0,"cell":59},{"id":"l61","cat":"lace","name":"牡丹","type":"alpha","file":"a/l61.webp","tw":207,"inv":true,"con":0.0,"cell":60},{"id":"l62","cat":"lace","name":"花纹 12","type":"alpha","file":"a/l62.webp","tw":264,"inv":false,"con":0.0,"cell":61},{"id":"m00","cat":"fur","name":"小绒毛","type":"stamp","file":"a/m00.webp","sp":0.059,"jt":0.47,"sc":0.22,"rt":1.0,"szj":0.0,"opj":0.15,"ltj":0.09,"hj":0.0,"cnt":0.12,"ds":80,"gain":1.0,"cell":0},{"id":"m01","cat":"fur","name":"顺滑绒毛","type":"stamp","file":"a/m01.webp","sp":0.069,"jt":0.27,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.05,"cnt":0.06,"ds":80,"gain":1.0,"cell":1},{"id":"m02","cat":"fur","name":"变色绒毛","type":"stamp","file":"a/m02.webp","sp":0.045,"jt":0.51,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.12,"hj":0.21,"cnt":0.06,"ds":80,"gain":1.0,"cell":2},{"id":"m03","cat":"fur","name":"卷曲","type":"stamp","file":"a/m03.webp","sp":0.055,"jt":0.58,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":3},{"id":"m04","cat":"fur","name":"细卷毛","type":"stamp","file":"a/m04.webp","sp":0.055,"jt":0.21,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":4},{"id":"m05","cat":"fur","name":"浓密绒毛","type":"stamp","file":"a/m05.webp","sp":0.076,"jt":0.82,"sc":0.0,"rt":1.0,"szj":0.38,"opj":0.0,"ltj":0.11,"hj":0.01,"cnt":0.06,"ds":80,"gain":1.0,"cell":5},{"id":"m06","cat":"fur","name":"毛茸茸","type":"stamp","file":"a/m06.webp","sp":0.062,"jt":0.65,"sc":0.0,"rt":1.0,"szj":0.37,"opj":0.0,"ltj":0.07,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":6},{"id":"m07","cat":"fur","name":"毛楂楂","type":"stamp","file":"a/m07.webp","sp":0.054,"jt":0.68,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.04,"hj":0.01,"cnt":0.06,"ds":80,"gain":1.0,"cell":7},{"id":"m08","cat":"fur","name":"蓬松","type":"stamp","file":"a/m08.webp","sp":0.062,"jt":0.89,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.06,"ltj":0.04,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":8},{"id":"m09","cat":"fur","name":"尾巴毛","type":"stamp","file":"a/m09.webp","sp":0.063,"jt":0.3,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.14,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":9},{"id":"m10","cat":"fur","name":"卷卷毛","type":"stamp","file":"a/m10.webp","sp":0.064,"jt":0.61,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.14,"hj":0.04,"cnt":0.06,"ds":80,"gain":1.0,"cell":10},{"id":"m11","cat":"fur","name":"渐变卷毛","type":"stamp","file":"a/m11.webp","sp":0.063,"jt":0.34,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.05,"hj":0.09,"cnt":0.06,"ds":80,"gain":1.0,"cell":11},{"id":"m12","cat":"fur","name":"硬毛","type":"stamp","file":"a/m12.webp","sp":0.05,"jt":0.06,"sc":0.56,"rt":0.0,"szj":0.0,"opj":0.15,"ltj":0.23,"hj":0.0,"cnt":0.25,"ds":80,"gain":1.0,"cell":12},{"id":"m13","cat":"fur","name":"绒毛","type":"stamp","file":"a/m13.webp","sp":0.022,"jt":0.65,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.06,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":13},{"id":"m14","cat":"fur","name":"斑马","type":"alpha","file":"a/m14.webp","tw":398,"inv":true,"con":1.0,"cell":14},{"id":"m15","cat":"fur","name":"细软绒毛","type":"stamp","file":"a/m15.webp","sp":0.035,"jt":0.58,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.06,"hj":0.03,"cnt":0.06,"ds":80,"gain":1.0,"cell":15},{"id":"m16","cat":"fur","name":"卷曲绒毛","type":"stamp","file":"a/m16.webp","sp":0.062,"jt":0.5,"sc":0.58,"rt":1.0,"szj":0.0,"opj":0.15,"ltj":0.23,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":16},{"id":"m17","cat":"fur","name":"刺毛","type":"stamp","file":"a/m17.webp","sp":0.062,"jt":0.65,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.14,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":17},{"id":"m18","cat":"fur","name":"毛绒","type":"stamp","file":"a/m18.webp","sp":0.064,"jt":0.44,"sc":0.0,"rt":1.0,"szj":0.0,"opj":0.0,"ltj":0.14,"hj":0.0,"cnt":0.06,"ds":80,"gain":1.0,"cell":18},{"id":"m19","cat":"fur","name":"渐变硬茬毛","type":"stamp","file":"a/m19.webp","sp":0.063,"jt":0.61,"sc":0.0,"rt":1.0,"szj":0.18,"opj":0.0,"ltj":0.23,"hj":0.14,"cnt":0.06,"ds":80,"gain":1.0,"cell":19},{"id":"m20","cat":"fur","name":"豹","type":"alpha","file":"a/m20.webp","tw":400,"inv":true,"con":1.0,"cell":20},{"id":"m21","cat":"fur","name":"豹子","type":"alpha","file":"a/m21.webp","tw":398,"inv":true,"con":0.82,"cell":21},{"id":"g00","cat":"gauze","name":"纱 1","type":"stamp","file":"a/g00.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":0},{"id":"g01","cat":"gauze","name":"纱 2","type":"stamp","file":"a/g01.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":1},{"id":"g02","cat":"gauze","name":"纱 3","type":"stamp","file":"a/g02.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":2},{"id":"g03","cat":"gauze","name":"纱 4","type":"stamp","file":"a/g03.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":3},{"id":"g04","cat":"gauze","name":"纱 5","type":"stamp","file":"a/g04.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":4},{"id":"g05","cat":"gauze","name":"纱 6","type":"stamp","file":"a/g05.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":5},{"id":"g06","cat":"gauze","name":"纱 7","type":"stamp","file":"a/g06.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":6},{"id":"g07","cat":"gauze","name":"纱 8","type":"stamp","file":"a/g07.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":7},{"id":"g08","cat":"gauze","name":"纱 9","type":"stamp","file":"a/g08.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":8},{"id":"g09","cat":"gauze","name":"纱 10","type":"stamp","file":"a/g09.webp","sp":0.0,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":9},{"id":"g10","cat":"gauze","name":"纱 11","type":"stamp","file":"a/g10.webp","sp":0.003,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":10},{"id":"g11","cat":"gauze","name":"纱 12","type":"stamp","file":"a/g11.webp","sp":0.003,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":11},{"id":"g12","cat":"gauze","name":"纱 13","type":"stamp","file":"a/g12.webp","sp":0.003,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":12},{"id":"g13","cat":"gauze","name":"纱 14","type":"stamp","file":"a/g13.webp","sp":0.001,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":13},{"id":"g14","cat":"gauze","name":"纱 15","type":"stamp","file":"a/g14.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":14},{"id":"g15","cat":"gauze","name":"纱 16","type":"stamp","file":"a/g15.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":15},{"id":"g16","cat":"gauze","name":"纱 17","type":"stamp","file":"a/g16.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":16},{"id":"g17","cat":"gauze","name":"纱 18","type":"stamp","file":"a/g17.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":17},{"id":"g18","cat":"gauze","name":"纱 19","type":"stamp","file":"a/g18.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":18},{"id":"g19","cat":"gauze","name":"纱 20","type":"stamp","file":"a/g19.webp","sp":0.002,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":19},{"id":"g20","cat":"gauze","name":"纱 21","type":"stamp","file":"a/g20.webp","sp":0.003,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":20},{"id":"g21","cat":"gauze","name":"纱 22","type":"stamp","file":"a/g21.webp","sp":0.003,"jt":0.0,"sc":0.0,"rt":0.0,"szj":0.0,"opj":0.0,"ltj":0.0,"hj":0.0,"cnt":0.0,"ds":220,"gain":2.2,"cell":21}],"atlases":{"fabric":{"file":"a/atlas_fabric.webp","cols":10,"cell":96,"n":38},"lace":{"file":"a/atlas_lace.webp","cols":10,"cell":96,"n":62},"fur":{"file":"a/atlas_fur.webp","cols":10,"cell":96,"n":22},"gauze":{"file":"a/atlas_gauze.webp","cols":10,"cell":96,"n":22}}};
 </script>
 <script>
@@ -128,10 +129,13 @@ function hueShift(c,deg){let[r,g,b]=c.map(v=>v/255);const mx=Math.max(r,g,b),mn=
 
 /* ================= 材质库 ================= */
 const MATS=MANI.mats,ATL=MANI.atlases,matById={};MATS.forEach(m=>matById[m.id]=m);
-const CATS=[['fabric','面料'],['lace','蕾丝薄纱'],['fur','皮草毛绒'],['gauze','纱']];
-const state={tool:'fill',cat:'fabric',mat:'f03',color:'#a63d4a',scale:100,rot:0,str:100,shade:60,size:70,op:100,dens:100,flow:90,under:false,erase:'all'};
-const lastMat={fabric:'f03',lace:'l04',fur:'m00',gauze:'g00'};
-const curMat=()=>matById[state.mat];
+const BCATS=[['silk','经典质地'],['fabric','面料纹理']],OCATS=[['lace','蕾丝薄纱'],['fur','皮草毛绒'],['gauze','纱']];
+const catsOf=()=>state.tool==='over'?OCATS:BCATS;
+const state={tool:'fill',bcat:'silk',ocat:'lace',bmat:'p_silk',omat:'l04',color:'#a63d4a',ocolor:'#f4efe6',scale:100,rot:0,str:100,shade:60,size:70,op:100,oop:90,dens:100,flow:90,erase:'decor'};
+const lastMat={silk:'p_silk',fabric:'f03',lace:'l04',fur:'m00',gauze:'g00'};
+const isOver=()=>state.tool==='over';
+const curMat=()=>matById[isOver()?state.omat:state.bmat];
+const curColor=()=>isOver()?state.ocolor:state.color;
 const PALETTE=['#f4efe6','#e6d3bd','#d9b3a0','#e8a0b4','#c97b84','#a63d4a','#7b1f2e','#f2b8a2','#e07a3f','#e9b949','#cdbf6a','#9fb88a','#4f7a5a','#1f4d44','#7fb7c4','#3d6fa5','#233a63','#8f86c4','#5a3d7a','#8a6a4f','#4a3428','#9a9a9a','#2b2b2f','#ffffff'];
 
 function loadImage(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('载入失败 '+src));i.src=src})}
@@ -158,9 +162,78 @@ function colorize(gray,w,h,m,col,str){const out=mk(w,h),x=out.getContext('2d'),i
 function tileFor(m,hex,scalePct,strPct){const iw=m.img.naturalWidth,ih=m.img.naturalHeight,disp=clamp(m.tw*scalePct/100,40,1100),Rw=Math.round(disp),Rh=Math.max(8,Math.round(disp*ih/iw));
   const key=[m.id,hex,Rw,strPct].join('|');let t=tileCache.get(key);if(t)return t;
   const rs=resizeTo(m.img,Rw,Rh);t=colorize(grayOf(rs),Rw,Rh,m,h2r(hex),strPct);cacheSet(key,t);return t}
-function textureLayer(m,bb){const t=mk(bb.w,bb.h),c=t.getContext('2d'),tile=tileFor(m,state.color,state.scale,state.str);
-  c.translate(-bb.x,-bb.y);const pat=c.createPattern(tile,'repeat');if(state.rot%360){try{pat.setTransform(new DOMMatrix().rotate(0,0,state.rot))}catch(_){}}
+function textureLayer(m,bb,hex,rand){const t=mk(bb.w,bb.h),c=t.getContext('2d'),tile=tileFor(m,hex,state.scale,state.str);
+  c.translate(-bb.x,-bb.y);const pat=c.createPattern(tile,'repeat');try{const M=new DOMMatrix();if(rand)M.translateSelf(Math.random()*tile.width,Math.random()*tile.height);pat.setTransform(M.rotate(0,0,state.rot+(rand?(Math.random()-.5)*50:0)))}catch(_){}
   c.fillStyle=pat;c.fillRect(bb.x,bb.y,bb.w,bb.h);c.setTransform(1,0,0,1,0,0);return t}
+
+
+/* ================= 经典质地（程序生成：丝绸/缎面/丝绒/雪纺…） ================= */
+const ptc=new Map();
+function ptile(key,col,make){const k=key+col.map(Math.round).join(',');let t=ptc.get(k);if(!t){t=make(col);ptc.set(k,t);if(ptc.size>40)ptc.delete(ptc.keys().next().value)}return t}
+function pixelTile(T,fn){const t=mk(T,T),x=t.getContext('2d'),id=x.createImageData(T,T),d=id.data;
+  for(let y=0;y<T;y++)for(let xx=0;xx<T;xx++){const c=fn(xx,y),i=(y*T+xx)*4;d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=c[3]===undefined?255:c[3]}
+  x.putImageData(id,0,0);return t}
+function noisify(t,amt,seed){const x=t.getContext('2d'),r=mulberry(seed),id=x.getImageData(0,0,t.width,t.height),d=id.data;
+  for(let i=0;i<d.length;i+=4){const n=(r()-.5)*amt*255;d[i]=clamp(d[i]+n,0,255);d[i+1]=clamp(d[i+1]+n,0,255);d[i+2]=clamp(d[i+2]+n,0,255)}
+  x.putImageData(id,0,0);return t}
+function velvetTile(col){const r=mulberry(3);return pixelTile(128,()=>{const f=.84+r()*.3;let c=col.map(v=>v*f);if(r()<.04)c=mixc(c,WHT,.25);return c})}
+function chiffonTile(col){const T=6,t=mk(T,T),x=t.getContext('2d');x.fillStyle=css(col);x.fillRect(0,0,T,T);x.fillStyle=css(mixc(col,BLK,.25),.35);x.fillRect(0,0,T,1);x.fillRect(0,0,1,T);x.fillStyle=css(mixc(col,WHT,.5),.35);x.fillRect(0,3,T,1);x.fillRect(3,0,1,T);return t}
+function denimTile(col){const T=96,t=mk(T,T),x=t.getContext('2d'),r=mulberry(7);x.fillStyle=css(col);x.fillRect(0,0,T,T);x.lineWidth=1.3;
+  for(let i=-T;i<T*2;i+=3){x.strokeStyle=css(BLK,.14);x.beginPath();x.moveTo(i,0);x.lineTo(i+T,T);x.stroke()}
+  for(let i=-T;i<T*2;i+=9){x.strokeStyle=css(WHT,.12);x.beginPath();x.moveTo(i+1.5,0);x.lineTo(i+T+1.5,T);x.stroke()}
+  for(let i=0;i<150;i++){x.fillStyle=r()<.5?css(WHT,.13):css(BLK,.13);x.fillRect(r()*T,r()*T,4+r()*8,1)}
+  return noisify(t,.07,9)}
+function tweedTile(col){const r=mulberry(5);const pal=[col,mixc(col,WHT,.38),mixc(col,BLK,.4),mixc(hueShift(col,25),WHT,.18),mixc(col,WHT,.78),mixc(hueShift(col,-30),BLK,.2)];const wts=[.3,.18,.18,.14,.08,.12];
+  const T=96,cells=T/2,grid=[];for(let i=0;i<cells*cells;i++){let q=r(),k=0,a=0;for(;k<wts.length;k++){a+=wts[k];if(q<a)break}grid.push(pal[Math.min(k,pal.length-1)])}
+  const t=pixelTile(T,(x,y)=>{const c=grid[(y>>1)*cells+(x>>1)],f=.92+r()*.16;return c.map(v=>v*f)});
+  const cx=t.getContext('2d');cx.fillStyle=css(BLK,.10);for(let i=0;i<T;i+=4){cx.fillRect(0,i,T,1);cx.fillRect(i,0,1,T)}return t}
+function plaidTile(col){const T=160,t=mk(T,T),x=t.getContext('2d');x.fillStyle=css(col);x.fillRect(0,0,T,T);
+  const band=(a,w,c,al)=>{x.fillStyle=css(c,al);x.fillRect(a,0,w,T);x.fillRect(0,a,T,w)};
+  band(0,44,BLK,.30);band(70,6,WHT,.55);band(104,3,BLK,.45);band(122,10,mixc(col,WHT,.35),.5);
+  x.strokeStyle=css(BLK,.07);x.lineWidth=1;for(let i=-T;i<T*2;i+=3){x.beginPath();x.moveTo(i,0);x.lineTo(i+T,T);x.stroke()}
+  return noisify(t,.05,4)}
+function stripeTile(col){const T=40,t=mk(T,16),x=t.getContext('2d');x.fillStyle=css(col);x.fillRect(0,0,T,16);
+  x.fillStyle=css(mixc(col,WHT,.8),.92);x.fillRect(0,0,4,16);x.fillStyle=css(mixc(col,BLK,.5),.7);x.fillRect(20,0,2,16);x.fillStyle=css(mixc(col,WHT,.35),.5);x.fillRect(28,0,1,16);
+  return noisify(t,.04,2)}
+function sequinTile(col){const T=48,t=mk(T,T),x=t.getContext('2d'),r=mulberry(11);x.fillStyle=css(mixc(col,BLK,.62));x.fillRect(0,0,T,T);
+  const R=4.5,list=[];for(let row=0;row<6;row++)for(let c=0;c<6;c++){const s=r(),base=s<.4?mixc(col,BLK,.35*(1-s/.4)):mixc(col,WHT,.5*((s-.4)/.6)*(r()<.1?1.4:1));list.push({cx:c*8+(row%2?8:4),cy:row*8+4,base,hl:.35+r()*.5,a:r()*6.28})}
+  for(const d of list)for(const ox of[-T,0,T])for(const oy of[-T,0,T]){const cx=d.cx+ox,cy=d.cy+oy;if(cx<-R||cx>T+R||cy<-R||cy>T+R)continue;
+    const g=x.createRadialGradient(cx-1.4,cy-1.6,.4,cx,cy,R);g.addColorStop(0,css(mixc(d.base,WHT,.7),.95));g.addColorStop(.35,css(d.base));g.addColorStop(1,css(mixc(d.base,BLK,.35)));
+    x.fillStyle=g;x.beginPath();x.arc(cx,cy,R,0,7);x.fill();x.strokeStyle=css(WHT,d.hl*.6);x.lineWidth=.9;x.beginPath();x.arc(cx,cy,R-1,d.a,d.a+1.1);x.stroke()}
+  return t}
+function floralTile(col){const T=240,t=mk(T,T),x=t.getContext('2d'),r=mulberry(21);x.fillStyle=css(col);x.fillRect(0,0,T,T);
+  const leaf=mixc([70,118,88],col,.22),pet=[mixc(col,WHT,.78),mixc(hueShift(col,18),WHT,.55),mixc(hueShift(col,-35),WHT,.62)];
+  const spots=[[30,34],[120,18],[196,70],[72,112],[170,150],[28,190],[122,214],[220,214]];
+  const wrap=fn=>{for(const ox of[-T,0,T])for(const oy of[-T,0,T])fn(ox,oy)};
+  for(let i=0;i<22;i++){const lx=r()*T,ly=r()*T,la=r()*6.28,ll=10+r()*8;wrap((ox,oy)=>{x.save();x.translate(lx+ox,ly+oy);x.rotate(la);x.fillStyle=css(leaf,.85);x.beginPath();x.ellipse(0,0,ll,ll*.38,0,0,7);x.fill();x.restore()})}
+  spots.forEach((p,i)=>{const R=15+r()*8,pc=pet[i%3],a0=r()*6.28;wrap((ox,oy)=>{const cx=p[0]+ox,cy=p[1]+oy;if(cx<-40||cx>T+40||cy<-40||cy>T+40)return;
+    for(let k=0;k<5;k++){const a=a0+k*Math.PI*2/5;x.save();x.translate(cx+Math.cos(a)*R*.55,cy+Math.sin(a)*R*.55);x.rotate(a);x.fillStyle=css(pc,.96);x.strokeStyle=css(mixc(pc,BLK,.25),.5);x.lineWidth=.8;x.beginPath();x.ellipse(0,0,R*.62,R*.42,0,0,7);x.fill();x.stroke();x.restore()}
+    x.fillStyle=css(mixc(col,[235,190,90],.7));x.beginPath();x.arc(cx,cy,R*.24,0,7);x.fill()})});
+  return t}
+/* 缎面/丝绸：一条横向光泽带，旋转后重复铺开 */
+const SHEEN={
+  satin:{P:560,stops:[[0,.28,'k'],[.16,0,0],[.34,.55,'w'],[.46,.18,'w'],[.6,.12,'k'],[.78,.3,'w'],[1,.28,'k']],fib:0},
+  silk:{P:380,stops:[[0,.20,'k'],[.18,.05,'k'],[.38,.42,'w'],[.5,.12,'w'],[.66,.08,'k'],[.84,.26,'w'],[1,.20,'k']],fib:.07},
+  gloss:{P:760,stops:[[0,.42,'k'],[.22,.1,'k'],[.42,.78,'w'],[.47,.88,'w'],[.56,.2,'w'],[.8,.1,'k'],[1,.42,'k']],fib:0}};
+function sheenTile(v,col){const d=SHEEN[v],P=d.P,t=mk(P,64),x=t.getContext('2d'),g=x.createLinearGradient(0,0,P,0);
+  d.stops.forEach(([p,k,w])=>g.addColorStop(p,css(w==='w'?mixc(col,WHT,k):w==='k'?mixc(col,BLK,k):col)));x.fillStyle=g;x.fillRect(0,0,P,64);
+  if(d.fib){const r=mulberry(31);for(let i=0;i<P*1.2;i++){x.fillStyle=r()<.5?css(WHT,.05+r()*.07):css(BLK,.05+r()*.07);x.fillRect(r()*P,0,1,64)}}return t}
+const PROCS=[
+ {id:'p_silk',name:'丝绸',kind:'sheen',v:'silk'},{id:'p_satin',name:'缎面',kind:'sheen',v:'satin'},{id:'p_gloss',name:'亮缎',kind:'sheen',v:'gloss'},
+ {id:'p_velvet',name:'丝绒',kind:'tile',key:'velvet',mkf:velvetTile},{id:'p_chiffon',name:'雪纺',kind:'tile',key:'chiffon',mkf:chiffonTile,opm:.7,pre:c=>mixc(c,WHT,.1)},
+ {id:'p_tweed',name:'花呢',kind:'tile',key:'tweed',mkf:tweedTile},{id:'p_denim',name:'牛仔',kind:'tile',key:'denim',mkf:denimTile},
+ {id:'p_plaid',name:'格纹',kind:'tile',key:'plaid',mkf:plaidTile},{id:'p_stripe',name:'条纹',kind:'tile',key:'stripe',mkf:stripeTile},
+ {id:'p_sequin',name:'亮片',kind:'tile',key:'sequin',mkf:sequinTile},{id:'p_floral',name:'印花',kind:'tile',key:'floral',mkf:floralTile},{id:'p_flat',name:'纯色',kind:'flat'}
+].map(p=>({...p,type:'proc',cat:'silk'}));
+PROCS.forEach(p=>matById[p.id]=p);
+const ALLM=[...PROCS,...MATS];
+function procDraw(c,bb,m,hex,scale,rot){const col=h2r(hex);
+  if(m.kind==='flat'){c.fillStyle=css(col);c.fillRect(bb.x,bb.y,bb.w,bb.h);return}
+  let tile,pat;
+  if(m.kind==='sheen'){tile=ptile('sh'+m.v,col,cc=>sheenTile(m.v,cc));pat=c.createPattern(tile,'repeat');
+    try{pat.setTransform(new DOMMatrix().rotate(rot+18).scale(scale/100))}catch(_){}}
+  else{tile=ptile(m.key,m.pre?m.pre(col):col,m.mkf);pat=c.createPattern(tile,'repeat');try{pat.setTransform(new DOMMatrix().rotate(rot).scale(scale/100))}catch(_){}}
+  c.fillStyle=pat;c.fillRect(bb.x,bb.y,bb.w,bb.h)}
 
 /* 笔头精灵（皮毛/纱）：灰度形状→带颜色的透明图 */
 const spriteCache=new Map();
@@ -205,27 +278,36 @@ function redo(){if(hpos>=hist.length)return;const e=hist[hpos++];for(const it of
 function syncUndo(){$('#bUndo').disabled=hpos<=0;$('#bRedo').disabled=hpos>=hist.length}
 
 /* ---- 点选填充 ---- */
-async function fillRegion(label){const m=curMat();if(!m)return;
-  try{await ensureMat(m)}catch(e){return}
-  if(m.type==='stamp')return fillStamp(label,m);
-  const bb=bbox[label],mask=getMask(label),layer=m.type==='tone'?'base':'decor',ctx=layers[layer].ctx;
-  pushHist(bb,[{layer,before:ctx.getImageData(bb.x,bb.y,bb.w,bb.h)}]);
-  const tex=textureLayer(m,bb),c=tex.getContext('2d');
-  if(m.type==='tone'&&state.shade>0&&label!==bgLabel){c.globalCompositeOperation='multiply';c.drawImage(shadeCanvas(bb,state.shade/100*1.15),0,0)}
+async function fillBase(label){const m=matById[state.bmat];if(!m)return;
+  if(m.type!=='proc'){try{await ensureMat(m)}catch(e){return}}
+  const bb=bbox[label],mask=getMask(label),ctx=layers.base.ctx;
+  pushHist(bb,[{layer:'base',before:ctx.getImageData(bb.x,bb.y,bb.w,bb.h)}]);
+  let tex;
+  if(m.type==='proc'){tex=mk(bb.w,bb.h);const c=tex.getContext('2d');c.translate(-bb.x,-bb.y);procDraw(c,bb,m,state.color,state.scale,state.rot);c.setTransform(1,0,0,1,0,0)}
+  else tex=textureLayer(m,bb,state.color);
+  const c=tex.getContext('2d');
+  if(state.shade>0&&label!==bgLabel){c.globalCompositeOperation='multiply';c.drawImage(shadeCanvas(bb,state.shade/100*1.15),0,0)}
   c.globalCompositeOperation='destination-in';c.drawImage(mask,0,0);
   ctx.save();ctx.globalCompositeOperation='destination-out';ctx.drawImage(mask,bb.x,bb.y);ctx.restore();
-  ctx.save();ctx.globalAlpha=state.op/100;ctx.drawImage(tex,bb.x,bb.y);ctx.restore()}
-function clearRegion(label){const bb=bbox[label],mask=getMask(label),names=state.erase==='all'?['base','decor']:['decor'];
+  ctx.save();ctx.globalAlpha=state.op/100*(m.opm||1);ctx.drawImage(tex,bb.x,bb.y);ctx.restore()}
+async function fillOver(label){const m=matById[state.omat];if(!m)return;
+  try{await ensureMat(m)}catch(e){return}
+  if(m.type==='stamp')return fillStamp(label,m);
+  const bb=bbox[label],mask=getMask(label),ctx=layers.decor.ctx;
+  pushHist(bb,[{layer:'decor',before:ctx.getImageData(bb.x,bb.y,bb.w,bb.h)}]);
+  const tex=textureLayer(m,bb,state.ocolor,true),c=tex.getContext('2d');
+  c.globalCompositeOperation='destination-in';c.drawImage(mask,0,0);
+  ctx.save();ctx.globalAlpha=state.oop/100;ctx.drawImage(tex,bb.x,bb.y);ctx.restore()}
+function clearRegion(label){const bb=bbox[label],mask=getMask(label),names=state.erase==='all'?['base','decor']:[state.erase];
   pushHist(bb,names.map(n=>({layer:n,before:layers[n].ctx.getImageData(bb.x,bb.y,bb.w,bb.h)})));
   for(const n of names){const c=layers[n].ctx;c.save();c.globalCompositeOperation='destination-out';c.drawImage(mask,bb.x,bb.y);c.restore()}}
 
 /* ---- 毛绒/纱：整块自动铺（顺着方向，裁在区域内） ---- */
 function fillStamp(label,m){
-  const bb=bbox[label],mask=getMask(label),ctx=layers.decor.ctx,size=state.size,sprites=spriteSet(m,state.color,size*1.3),
+  const bb=bbox[label],mask=getMask(label),ctx=layers.decor.ctx,size=state.size,sprites=spriteSet(m,state.ocolor,size*1.3),
     rnd=mulberry((Date.now()^label*977)&0x7fffffff),fl=state.flow*Math.PI/180,fx=Math.cos(fl),fy=Math.sin(fl),px=-fy,py=fx,
     gauze=m.cat==='gauze',dens=state.dens/100;
   const items=[{layer:'decor',before:ctx.getImageData(bb.x,bb.y,bb.w,bb.h)}];
-  const under=state.under;if(under)items.push({layer:'base',before:layers.base.ctx.getImageData(bb.x,bb.y,bb.w,bb.h)});
   pushHist(bb,items);
   const t=mk(bb.w,bb.h),c=t.getContext('2d'),cx=bb.x+bb.w/2,cy=bb.y+bb.h/2,half=Math.hypot(bb.w,bb.h)/2+size;
   const pts=[],inR=(x,y)=>{x|=0;y|=0;return x>=0&&y>=0&&x<W&&y<H&&L[y*W+x]===label};
@@ -244,15 +326,12 @@ function fillStamp(label,m){
   for(const p of pts){const sz=size*(1+(rnd()-.5)*2*m.szj),spr=sprites[Math.floor(rnd()*sprites.length)];
     c.save();c.translate(p.x,p.y);c.rotate(p.a+(gauze?0:1.5708));c.globalAlpha=1-rnd()*m.opj;c.drawImage(spr,-sz/2,-sz/2,sz,sz);c.restore()}
   c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='destination-in';c.drawImage(mask,0,0);
-  if(under){const b=layers.base.ctx,col=mixc(h2r(state.color),BLK,.3);b.save();b.globalCompositeOperation='destination-out';b.drawImage(mask,bb.x,bb.y);b.globalCompositeOperation='source-over';
-    const u=mk(bb.w,bb.h),uc=u.getContext('2d');uc.fillStyle=css(col);uc.fillRect(0,0,bb.w,bb.h);uc.globalCompositeOperation='destination-in';uc.drawImage(mask,0,0);b.drawImage(u,bb.x,bb.y);b.restore()}
-  ctx.save();ctx.globalCompositeOperation='destination-out';ctx.drawImage(mask,bb.x,bb.y);ctx.restore();
-  ctx.save();ctx.globalAlpha=state.op/100;ctx.drawImage(t,bb.x,bb.y);ctx.restore()}
+  ctx.save();ctx.globalAlpha=state.oop/100;ctx.drawImage(t,bb.x,bb.y);ctx.restore()}
 
 /* ---- 高亮预览 ---- */
 let hlLabel=0;
 function showHL(label){if(label===hlLabel)return;hlLabel=label;const x=hl.getContext('2d');x.clearRect(0,0,W,H);if(!label)return;
-  const bb=bbox[label];x.drawImage(getMask(label),bb.x,bb.y);x.globalCompositeOperation='source-in';x.fillStyle=state.tool==='clear'?'rgba(60,60,60,.35)':'rgba(255,70,120,.38)';x.fillRect(bb.x,bb.y,bb.w,bb.h);x.globalCompositeOperation='source-over';
+  const bb=bbox[label];x.drawImage(getMask(label),bb.x,bb.y);x.globalCompositeOperation='source-in';x.fillStyle=state.tool==='clear'?'rgba(60,60,60,.35)':state.tool==='over'?'rgba(60,140,255,.38)':'rgba(255,70,120,.38)';x.fillRect(bb.x,bb.y,bb.w,bb.h);x.globalCompositeOperation='source-over';
   x.strokeStyle='rgba(255,40,100,.9)';x.lineWidth=2/view.s}
 function labelAt(wx,wy){return(wx>=0&&wy>=0&&wx<W&&wy<H)?L[(wy|0)*W+(wx|0)]:0}
 
@@ -266,7 +345,7 @@ function clampView(){const r=stage.getBoundingClientRect(),m=60,w=W*view.s,h=H*v
 function zoomAt(cx,cy,ns){const r=stage.getBoundingClientRect(),px=cx-r.left,py=cy-r.top;ns=clamp(ns,.08,3.5);const wx=(px-view.tx)/view.s,wy=(py-view.ty)/view.s;view.s=ns;view.tx=px-wx*ns;view.ty=py-wy*ns;clampView();applyView()}
 stage.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,view.s*Math.exp(-e.deltaY*.0015))},{passive:false});
 const ptrs=new Map();let gest=null,tap=null,panning=null;
-const aiming=()=>state.tool==='fill'||state.tool==='clear';
+const aiming=()=>state.tool==='fill'||state.tool==='over'||state.tool==='clear';
 stage.addEventListener('pointerdown',e=>{if(!L)return;try{stage.setPointerCapture(e.pointerId)}catch(_){}
   ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===2){tap=null;panning=null;showHL(0);const[a,b]=[...ptrs.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y)||1,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,s:view.s,tx:view.tx,ty:view.ty};return}
@@ -284,7 +363,7 @@ stage.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)ret
 function release(e,cancel){const had=ptrs.delete(e.pointerId);if(!had)return;
   if(gest){if(ptrs.size<2)gest=null;if(ptrs.size===0)tap=null;return}
   if(!tap)return;
-  if(!cancel&&!panning&&aiming()){const label=labelAt(tap.wx,tap.wy);if(label){if(state.tool==='fill')fillRegion(label);else clearRegion(label)}}
+  if(!cancel&&!panning&&aiming()){const label=labelAt(tap.wx,tap.wy);if(label){if(state.tool==='fill')fillBase(label);else if(state.tool==='over')fillOver(label);else clearRegion(label)}}
   showHL(0);panning=null;tap=null;stage.classList.remove('move')}
 stage.addEventListener('pointerup',e=>release(e));stage.addEventListener('pointercancel',e=>release(e,true));
 
@@ -292,15 +371,17 @@ stage.addEventListener('pointerup',e=>release(e));stage.addEventListener('pointe
 let hintOn=true;function hideHint(){if(!hintOn)return;hintOn=false;$('#hint').style.opacity=0}setTimeout(hideHint,7000);
 const atlasImg={};
 function buildColors(){const row=$('#colors');row.innerHTML='';
-  PALETTE.forEach(c=>{const b=document.createElement('button');b.className='sw'+(c===state.color?' on':'');b.style.background=c;b.dataset.c=c;b.title=c;row.appendChild(b)});
+  PALETTE.forEach(c=>{const b=document.createElement('button');b.className='sw'+(c===curColor()?' on':'');b.style.background=c;b.dataset.c=c;b.title=c;row.appendChild(b)});
   const p=document.createElement('label');p.className='pick';p.title='自定义颜色';p.innerHTML='<input type="color">';row.appendChild(p);
-  p.querySelector('input').value=state.color;p.querySelector('input').addEventListener('input',e=>setColor(e.target.value));
+  p.querySelector('input').value=curColor();p.querySelector('input').addEventListener('input',e=>setColor(e.target.value));
   row.addEventListener('click',e=>{const b=e.target.closest('.sw');if(b)setColor(b.dataset.c)})}
 let thumbT=0;
-function setColor(c){state.color=c;document.querySelectorAll('.sw').forEach(s=>s.classList.toggle('on',s.dataset.c===c));const pk=document.querySelector('.pick input');if(pk&&/^#[0-9a-f]{6}$/i.test(c))pk.value=c;clearTimeout(thumbT);thumbT=setTimeout(drawChips,60)}
+function setColor(c){if(isOver())state.ocolor=c;else state.color=c;document.querySelectorAll('.sw').forEach(s=>s.classList.toggle('on',s.dataset.c===c));const pk=document.querySelector('.pick input');if(pk&&/^#[0-9a-f]{6}$/i.test(c))pk.value=c;clearTimeout(thumbT);thumbT=setTimeout(drawChips,60)}
 
-function drawChip(cv,m){const w=cv.width,h=cv.height,c=cv.getContext('2d'),at=ATL[m.cat],img=atlasImg[m.cat],col=h2r(state.color),lum=.3*col[0]+.59*col[1]+.11*col[2];
-  c.fillStyle=lum>165?'#6c655f':'#ece7de';c.fillRect(0,0,w,h);if(!img)return;
+function drawChip(cv,m){const w=cv.width,h=cv.height,c=cv.getContext('2d'),hex=curColor(),col=h2r(hex),lum=.3*col[0]+.59*col[1]+.11*col[2];
+  c.fillStyle=lum>165?'#6c655f':'#ece7de';c.fillRect(0,0,w,h);
+  if(m.type==='proc'){procDraw(c,{x:0,y:0,w,h},m,hex,m.kind==='sheen'?50:(m.key==='floral'||m.key==='plaid'?45:100),0);return}
+  const at=ATL[m.cat],img=atlasImg[m.cat];if(!img)return;
   const cs=at.cell,sx=(m.cell%at.cols)*cs,sy=Math.floor(m.cell/at.cols)*cs,t=mk(cs,cs),x=t.getContext('2d');x.drawImage(img,sx,sy,cs,cs,0,0,cs,cs);
   const id=x.getImageData(0,0,cs,cs),d=id.data,N=cs*cs;
   if(m.type==='tone'){let s=0,s2=0;for(let i=0;i<N;i++){const g=d[i*4];s+=g;s2+=g*g}const mean=s/N,std=Math.sqrt(Math.max(1,s2/N-mean*mean)),den=std*2.2+4;
@@ -309,31 +390,36 @@ function drawChip(cv,m){const w=cv.width,h=cv.height,c=cv.getContext('2d'),at=AT
     for(let i=0;i<N;i++){const j=i*4;let a=d[j]/255;if(!stamp){if(m.inv)a=1-a;a=clamp((a-.5)*(1+(m.con||0)*2)+.5,0,1)}else a=Math.min(1,a*gain);d[j]=col[0];d[j+1]=col[1];d[j+2]=col[2];d[j+3]=a*255}}
   x.putImageData(id,0,0);const s=Math.max(w,h)/cs;c.drawImage(t,(w-cs*s)/2,(h-cs*s)/2,cs*s,cs*s)}
 function drawChips(){document.querySelectorAll('#chips .chip').forEach(b=>drawChip(b.querySelector('canvas'),matById[b.dataset.id]))}
-function buildCats(){const row=$('#cats');row.innerHTML='';CATS.forEach(([id,name])=>{const b=document.createElement('button');b.className='cat'+(id===state.cat?' on':'');b.dataset.c=id;b.textContent=name;row.appendChild(b)})}
+function buildCats(){const row=$('#cats');row.innerHTML='';const cur=isOver()?state.ocat:state.bcat;catsOf().forEach(([id,name])=>{const b=document.createElement('button');b.className='cat'+(id===cur?' on':'');b.dataset.c=id;b.textContent=name;row.appendChild(b)})}
 function buildChips(){const row=$('#chips');row.innerHTML='';
-  MATS.filter(m=>m.cat===state.cat).forEach(m=>{const b=document.createElement('button');b.className='chip'+(m.id===state.mat?' on':'');b.dataset.id=m.id;const cv=document.createElement('canvas');cv.width=104;cv.height=84;b.appendChild(cv);const sp=document.createElement('span');sp.textContent=m.name;b.appendChild(sp);row.appendChild(b)});
+  const curId=isOver()?state.omat:state.bmat,curCat=isOver()?state.ocat:state.bcat;ALLM.filter(m=>m.cat===curCat).forEach(m=>{const b=document.createElement('button');b.className='chip'+(m.id===curId?' on':'');b.dataset.id=m.id;const cv=document.createElement('canvas');cv.width=104;cv.height=84;b.appendChild(cv);const sp=document.createElement('span');sp.textContent=m.name;b.appendChild(sp);row.appendChild(b)});
   drawChips();const on=row.querySelector('.on');if(on)on.scrollIntoView({inline:'center',block:'nearest'})}
-$('#cats').addEventListener('click',e=>{const b=e.target.closest('.cat');if(!b)return;state.cat=b.dataset.c;setMat(lastMat[state.cat],true)});
+$('#cats').addEventListener('click',e=>{const b=e.target.closest('.cat');if(!b)return;if(isOver())state.ocat=b.dataset.c;else state.bcat=b.dataset.c;setMat(lastMat[b.dataset.c])});
 $('#chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(b)setMat(b.dataset.id)});
 
-function setMat(id){const m=matById[id];if(!m)return;state.mat=id;state.cat=m.cat;lastMat[m.cat]=id;
-  if(m.type==='stamp')state.size=m.ds;
-  state.under=false;ensureMat(m).catch(()=>{});buildCats();buildChips();syncTools();buildSliders()}
+function setMat(id){const m=matById[id];if(!m)return;if(isOver()){state.omat=id;state.ocat=m.cat;if(m.type==='stamp')state.size=m.ds}else{state.bmat=id;state.bcat=m.cat}
+  lastMat[m.cat]=id;if(m.type!=='proc')ensureMat(m).catch(()=>{});buildCats();buildChips();syncTools();buildSliders()}
 function syncTools(){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===state.tool));
-  const showMat=state.tool==='fill';$('#cats').style.display=showMat?'':'none';$('#chips').style.display=showMat?'':'none';$('#colors').style.display=showMat?'':'none';stage.style.cursor=state.tool==='move'?'grab':'crosshair'}
-function setTool(t){state.tool=t;showHL(0);syncTools();buildSliders()}
+  const showMat=state.tool==='fill'||state.tool==='over';$('#cats').style.display=showMat?'':'none';$('#chips').style.display=showMat?'':'none';$('#colors').style.display=showMat?'':'none';stage.style.cursor=state.tool==='move'?'grab':'crosshair'}
+function setTool(t){state.tool=t;showHL(0);if(t==='fill'||t==='over'){buildColors();buildCats();buildChips()}syncTools();buildSliders()}
 $('#tools').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b)setTool(b.dataset.t)});
 
-function buildSliders(){const s=$('#sliders');s.innerHTML='';const m=curMat(),t=state.tool,stamp=m.type==='stamp',tone=m.type==='tone';
+function buildSliders(){const s=$('#sliders');s.innerHTML='';const t=state.tool,m=curMat();
   const rng=(label,key,min,max,unit)=>{const l=document.createElement('label');l.innerHTML=`${label}<input type="range" min="${min}" max="${max}" value="${state[key]}"><b>${state[key]}${unit}</b>`;
     const inp=l.querySelector('input'),out=l.querySelector('b');inp.addEventListener('input',()=>{state[key]=+inp.value;out.textContent=inp.value+unit});s.appendChild(l)};
-  const seg=()=>{const d=document.createElement('span');d.className='seg';d.innerHTML=`<button data-v="all" class="${state.erase==='all'?'on':''}">全部图层</button><button data-v="decor" class="${state.erase==='decor'?'on':''}">仅装饰层</button>`;
+  const note=txt=>{const sp=document.createElement('span');sp.textContent=txt;s.appendChild(sp)};
+  const seg=()=>{const d=document.createElement('span');d.className='seg';const o=[['decor','叠加层'],['base','质地'],['all','全部']];d.innerHTML=o.map(([v,n])=>`<button data-v="${v}" class="${state.erase===v?'on':''}">${n}</button>`).join('');
     d.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state.erase=b.dataset.v;d.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});s.appendChild(d)};
-  const under=()=>{const b=document.createElement('button');b.className='lock'+(state.under?' on':'');b.textContent=state.under?'✓ 铺底色':'铺底色';b.addEventListener('click',()=>{state.under=!state.under;b.className='lock'+(state.under?' on':'');b.textContent=state.under?'✓ 铺底色':'铺底色'});s.appendChild(b)};
-  if(t==='fill'){if(stamp){rng('大小','size',20,300,'');rng('密度','dens',40,200,'%');rng('方向','flow',0,359,'°');rng('浓度','op',10,100,'%');under()}
-    else{rng('纹理大小','scale',30,250,'%');rng('方向','rot',0,360,'°');rng('纹理强度','str',0,200,'%');if(tone)rng('立体感','shade',0,100,'');rng('浓度','op',10,100,'%')}}
-  else if(t==='clear'){const sp=document.createElement('span');sp.textContent='点区域清除：';s.appendChild(sp);seg()}
-  else{const sp=document.createElement('span');sp.textContent='拖动画面移动 · 双指缩放 · 面料在底层，蕾丝/皮草/纱在上层';s.appendChild(sp)}}
+  if(t==='fill'){
+    if(m.type==='proc'){if(m.kind==='sheen'){rng('光泽宽度','scale',30,300,'%');rng('光泽方向','rot',0,360,'°')}else if(m.kind==='tile'){rng('纹理大小','scale',30,300,'%');rng('方向','rot',0,360,'°')}}
+    else{rng('纹理大小','scale',30,250,'%');rng('方向','rot',0,360,'°');rng('纹理强度','str',0,200,'%')}
+    rng('立体感','shade',0,100,'');rng('浓度','op',10,100,'%')}
+  else if(t==='over'){
+    if(m.type==='stamp'){rng('大小','size',20,300,'');rng('密度','dens',40,200,'%');rng('方向','flow',0,359,'°')}
+    else{rng('纹理大小','scale',30,250,'%');rng('方向','rot',0,360,'°');rng('纹理强度','str',0,200,'%')}
+    rng('浓度','oop',10,100,'%');note('同一块可反复点，越叠越厚')}
+  else if(t==='clear'){note('点区域清除：');seg()}
+  else note('拖动画面移动 · 双指缩放')}
 
 $('#fold').addEventListener('click',()=>{const p=$('#panel');p.classList.toggle('collapsed');$('#fold').textContent=p.classList.contains('collapsed')?'⌃':'⌄';setTimeout(()=>{if(view.mode==='all')fitAll()},30)});
 $('#bUndo').addEventListener('click',undo);$('#bRedo').addEventListener('click',redo);
@@ -369,10 +455,10 @@ $('#gown').addEventListener('click',e=>{const b=e.target.closest('.gi');if(b){$(
   buildColors();buildCats();buildChips();buildGowns();syncTools();buildSliders();
   const keys=Object.keys(ATL);
   Promise.all(keys.map(k=>loadImage(ATL[k].file).then(i=>{atlasImg[k]=i}).catch(()=>{}))).then(drawChips);
-  ensureMat(curMat()).catch(()=>{});
+  
   await loadGown(GOWNS[0].id)
 })().catch(err=>{$('#loading').textContent='载入失败：'+err.message});
-window.__dbg={fillStamp,showHL,applyView,state,get L(){return L},get bbox(){return bbox},get W(){return W},get H(){return H},loadGown,view,fillRegion,setTool,setMat,setColor,layers,get bg(){return bgLabel},ensureMat,matById};
+window.__dbg={fillStamp,fillBase,fillOver,showHL,applyView,state,get L(){return L},get bbox(){return bbox},get W(){return W},get H(){return H},loadGown,view,setTool,setMat,setColor,layers,get bg(){return bgLabel},ensureMat,matById};
 })();
 </script>
 </body>
